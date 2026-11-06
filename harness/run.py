@@ -182,26 +182,63 @@ def extraneous(before: str, after: str, gold_buggy_lines: list[int]) -> int:
     return len([n for n in st["removed_line_numbers"] if n not in set(gold_buggy_lines)])
 
 
+def recount_hunks(diff_text: str) -> str:
+    """Rewrite @@ -a,b +c,d @@ headers with counts recomputed from the hunk body
+    (models often get the counts wrong). Line starts are kept."""
+    out, hunk, header = [], [], None
+
+    def flush():
+        if header is None:
+            return
+        old = sum(1 for l in hunk if l[:1] in (" ", "-"))
+        new = sum(1 for l in hunk if l[:1] in (" ", "+"))
+        m = re.match(r"@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)", header)
+        if m:
+            out.append(f"@@ -{m.group(1)},{old} +{m.group(2)},{new} @@{m.group(3)}")
+        else:
+            out.append(header)
+        out.extend(hunk)
+
+    for line in diff_text.split("\n"):
+        if line.startswith("@@"):
+            flush(); header, hunk = line, []
+        elif header is None:
+            out.append(line)
+        else:
+            if line == "" :
+                hunk.append(" ")  # blank context line written without the leading space
+            else:
+                hunk.append(line)
+    flush()
+    return "\n".join(out)
+
+
 def apply_udiff(src: str, diff_text: str) -> tuple[str, str | None]:
-    """Try git apply (strict), then patch with fuzz. Returns (tier, new_src)."""
+    """Apply passes, lenient to strict: git apply; patch -F3 (p1, p0); the same
+    two after recounting hunk headers. Returns (tier, new_src)."""
+    def try_apply(td: Path, dfile: str, args: list[str]) -> str | None:
+        (td / "src.py").write_text(src)
+        r = subprocess.run(args + [dfile], cwd=td, capture_output=True, text=True)
+        return (td / "src.py").read_text() if r.returncode == 0 else None
+
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
-        (td / "src.py").write_text(src)
-        (td / "p.diff").write_text(diff_text if diff_text.endswith("\n") else diff_text + "\n")
+        text = diff_text if diff_text.endswith("\n") else diff_text + "\n"
+        (td / "p.diff").write_text(text)
+        (td / "r.diff").write_text(recount_hunks(text))
         subprocess.run(["git", "init", "-q"], cwd=td, capture_output=True)
-        r = subprocess.run(["git", "apply", "--whitespace=nowarn", "p.diff"], cwd=td, capture_output=True, text=True)
-        if r.returncode == 0:
-            return "strict", (td / "src.py").read_text()
-        (td / "src.py").write_text(src)
-        r = subprocess.run(["patch", "-p1", "-F3", "--no-backup-if-mismatch", "-i", "p.diff"],
-                           cwd=td, capture_output=True, text=True)
-        if r.returncode == 0:
-            return "fuzzy", (td / "src.py").read_text()
-        (td / "src.py").write_text(src)
-        r = subprocess.run(["patch", "-p0", "-F3", "--no-backup-if-mismatch", "-i", "p.diff"],
-                           cwd=td, capture_output=True, text=True)
-        if r.returncode == 0:
-            return "fuzzy", (td / "src.py").read_text()
+        passes = [
+            ("strict", "p.diff", ["git", "apply", "--whitespace=nowarn"]),
+            ("fuzzy", "p.diff", ["patch", "-p1", "-F3", "--no-backup-if-mismatch", "-i"]),
+            ("fuzzy", "p.diff", ["patch", "-p0", "-F3", "--no-backup-if-mismatch", "-i"]),
+            ("recount", "r.diff", ["git", "apply", "--whitespace=nowarn"]),
+            ("recount_fuzzy", "r.diff", ["patch", "-p1", "-F3", "--no-backup-if-mismatch", "-i"]),
+            ("recount_fuzzy", "r.diff", ["patch", "-p0", "-F3", "--no-backup-if-mismatch", "-i"]),
+        ]
+        for tier, dfile, args in passes:
+            new = try_apply(td, dfile, args)
+            if new is not None:
+                return tier, new
     return "failed", None
 
 
@@ -240,21 +277,30 @@ def parse_tool_call(resp: dict, expected_name: str) -> tuple[str, dict | None, s
 def evaluate(task_dir: Path, protocol: str, max_tokens: int, thinking: bool, hint: bool = False) -> dict:
     meta = json.loads((task_dir / "task.json").read_text())
     src = (task_dir / "src.py").read_text()
-    gold = (task_dir / "gold.py").read_text()
-    tests = (task_dir / "test_task.py").read_text()
     messages = build_messages(meta, src, protocol, hint)
     tools = TOOLS.get(protocol)
     resp = call_model(messages, tools, max_tokens, thinking)
+    rec = score(task_dir, protocol, resp)
+    rec["hint"] = hint
+    return rec
+
+
+def score(task_dir: Path, protocol: str, resp: dict) -> dict:
+    """Turn a model response into a scored record. Pure function of the logged
+    response, so results can be recomputed without the model (harness/reapply.py)."""
+    meta = json.loads((task_dir / "task.json").read_text())
+    src = (task_dir / "src.py").read_text()
+    gold = (task_dir / "gold.py").read_text()
+    tests = (task_dir / "test_task.py").read_text()
     usage = resp.get("usage", {})
     timings = resp.get("timings", {})
     rec = {
         "task": meta["id"],
         "protocol": protocol,
-        "hint": hint,
         "finish_reason": resp["choices"][0].get("finish_reason"),
         "prompt_tokens": usage.get("prompt_tokens"),
         "completion_tokens": usage.get("completion_tokens"),
-        "wall_s": resp["_wall_s"],
+        "wall_s": resp.get("_wall_s"),
         "gen_tok_per_s": timings.get("predicted_per_second"),
         "raw_message": resp["choices"][0]["message"],
         "stage": None,          # failure ladder label

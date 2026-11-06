@@ -21,6 +21,8 @@ LADDER = ["no_tool_call", "multiple_calls", "wrong_tool", "bad_args", "no_diff_f
 def load(paths):
     runs = defaultdict(dict)  # (model, protocol, thinking) -> {task: rec}
     for p in paths:
+        if Path(p).name.startswith("rescore"):
+            continue
         for line in Path(p).read_text().splitlines():
             if not line.strip():
                 continue

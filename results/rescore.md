@@ -4,4 +4,5 @@ Replay of logged edits. `base` = plain replacement (what was scored). `repair` =
 
 | model | protocol | N | base resolved | syntax errors | repair attempted | repaired compiles | repaired resolved | resolved with repair |
 |---|---|---|---|---|---|---|---|---|
-| e2b | edit_file | 19 | 4 | 3 | 3 | 3 | 1 | **5** |
+| e2b | edit_file | 35 | 9 | 5 | 4 | 3 | 1 | **10** |
+| e2b | edit_file_v | 1 | 0 | 0 | 0 | 0 | 0 | **0** |
