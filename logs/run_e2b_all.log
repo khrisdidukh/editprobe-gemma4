@@ -9,3 +9,12 @@
 [8/35] httpx_primitive_value            pass                   tier=exact tok=86   9.9s  resolved so far 1
 [9/35] httpx_same_origin                pass                   tier=exact tok=165  18.6s  resolved so far 2
 [10/35] httpx_text_chunker               tests_fail             tier=exact tok=181  21.0s  resolved so far 2
+[11/35] httpx_timeout                    syntax_error           tier=exact tok=456  53.5s  resolved so far 2
+[12/35] httpx_url_pattern                tests_fail             tier=exact tok=587  64.4s  resolved so far 2
+[13/35] req_case_insensitive_dict        pass                   tier=exact tok=72  10.7s  resolved so far 3
+[14/35] req_check_header_validity        old_not_found          tier=not_found tok=504  51.0s  resolved so far 3
+[15/35] req_dotted_netmask               old_not_found          tier=not_found tok=101  12.6s  resolved so far 3
+[16/35] req_get_auth_from_url            pass                   tier=exact tok=79   9.6s  resolved so far 4
+[17/35] req_get_encoding_from_headers    tests_fail             tier=exact tok=220  23.5s  resolved so far 4
+[18/35] req_guess_json_utf               old_not_found          tier=not_found tok=308  33.1s  resolved so far 4
+[19/35] req_iter_slices                  tests_fail_regression  tier=exact tok=102  12.4s  resolved so far 4

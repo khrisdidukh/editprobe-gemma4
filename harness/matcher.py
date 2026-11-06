@@ -105,3 +105,88 @@ def diagnose_not_found(text: str, old: str) -> str:
     if len(missing) < len(lines):
         return "partially_hallucinated"
     return "hallucinated"
+
+
+def span_repair(text: str, old: str, new: str, span: tuple[int, int]) -> tuple[str, dict]:
+    """Harness-side repair for a common small-model error: new_string covers a
+    larger span than old_string (it repeats lines that sit just before or just
+    after the matched region), so a plain replacement duplicates code.
+
+    We drop leading lines of `new` that equal the file lines immediately before
+    the match, and trailing lines of `new` that equal the lines immediately
+    after it. Returns (repaired_new, info).
+    """
+    a, b = span
+    before = text[:a].split("\n")
+    after = text[b:].split("\n")
+    # text[:a] ends with the (possibly partial) line prefix before the match;
+    # old_string typically starts at a line start, so before[-1] is '' or indent.
+    before_lines = [l for l in before[:-1]] if before and before[-1].strip() == "" else before
+    after_lines = after[1:] if after and after[0] == "" else after  # skip the rest of the line the match ends in
+    new_lines = new.split("\n")
+    if new_lines and new_lines[-1] == "":
+        new_lines.pop()  # trailing newline
+    old_lines = old.split("\n")
+
+    def nonblank(ls):
+        return any(l.strip() for l in ls)
+
+    # largest k such that the last k lines of new == first k lines after the match
+    dropped_tail = 0
+    for k in range(min(len(new_lines) - 1, len(after_lines)), 0, -1):
+        if new_lines[-k:] == after_lines[:k] and nonblank(new_lines[-k:]):
+            new_lines = new_lines[:-k]
+            dropped_tail = k
+            break
+    # largest k such that the first k lines of new == last k lines before the match
+    dropped_head = 0
+    for k in range(min(len(new_lines) - 1, len(before_lines)), 0, -1):
+        if new_lines[:k] == before_lines[-k:] and nonblank(new_lines[:k]):
+            new_lines = new_lines[k:]
+            dropped_head = k
+            break
+    return "\n".join(new_lines), {"dropped_head": dropped_head, "dropped_tail": dropped_tail}
+
+
+def anchor_repair(text: str, old: str, new: str, span: tuple[int, int], window: int = 80) -> tuple[Optional[str], dict]:
+    """Harness-side repair for span mismatch, by anchor expansion.
+
+    Small models often write a new_string that spans a larger region than their
+    old_string: it starts with lines that sit *before* the match and/or ends
+    with lines that sit *after* it (sometimes with the actual fix in that
+    overflow). Replacing only the old_string span then duplicates code.
+
+    Repair: take the first and last non-blank lines of new_string as anchors.
+    Search for the first anchor in the `window` lines before the match and for
+    the last anchor in the `window` lines after it. If an anchor is found
+    exactly once, extend the replaced region to it. Returns (new_text or None,
+    info). None means no expansion was possible (anchors not found or ambiguous).
+    """
+    a, b = span
+    lines = text.split("\n")
+    # line index of span start / end
+    start_line = text.count("\n", 0, a)
+    end_line = text.count("\n", 0, b)  # line containing the last char of the match
+    new_lines = new.rstrip("\n").split("\n")
+    nb = [l for l in new_lines if l.strip()]
+    if len(nb) < 2:
+        return None, {"reason": "new too short"}
+    first, last = nb[0], nb[-1]
+    old_lines = old.strip("\n").split("\n")
+
+    new_start, new_end = start_line, end_line
+    info = {"head": 0, "tail": 0}
+    if first != old_lines[0]:
+        cands = [i for i in range(max(0, start_line - window), start_line) if lines[i] == first]
+        if len(cands) == 1:
+            new_start = cands[0]
+            info["head"] = start_line - new_start
+    if last != old_lines[-1]:
+        cands = [i for i in range(end_line + 1, min(len(lines), end_line + 1 + window)) if lines[i] == last]
+        if len(cands) == 1:
+            new_end = cands[0]
+            info["tail"] = new_end - end_line
+    if (new_start, new_end) == (start_line, end_line):
+        return None, {"reason": "no anchor expansion"}
+    repaired = lines[:new_start] + new_lines + lines[new_end + 1:]
+    return "\n".join(repaired), info
