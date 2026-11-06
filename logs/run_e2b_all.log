@@ -18,3 +18,11 @@
 [17/35] req_get_encoding_from_headers    tests_fail             tier=exact tok=220  23.5s  resolved so far 4
 [18/35] req_guess_json_utf               old_not_found          tier=not_found tok=308  33.1s  resolved so far 4
 [19/35] req_iter_slices                  tests_fail_regression  tier=exact tok=102  12.4s  resolved so far 4
+[20/35] req_parse_dict_header            tests_fail             tier=exact tok=101  13.9s  resolved so far 4
+[21/35] req_parse_header_links           pass                   tier=exact tok=124  15.5s  resolved so far 5
+[22/35] req_prepend_scheme               tests_fail             tier=exact tok=69  10.2s  resolved so far 5
+[23/35] req_super_len                    tests_fail             tier=exact tok=451  47.3s  resolved so far 5
+[24/35] req_unquote_unreserved           tests_fail             tier=exact tok=409  44.3s  resolved so far 5
+[25/35] rich_ansi_strip                  tests_fail             tier=exact tok=93  11.2s  resolved so far 5
+[26/35] rich_chop_cells                  pass                   tier=exact tok=259  30.2s  resolved so far 6
+[27/35] rich_color_triplet               pass                   tier=exact tok=89  12.2s  resolved so far 7
