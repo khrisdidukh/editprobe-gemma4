@@ -78,7 +78,7 @@ def main():
     ax.set_title("EditProbe: where each attempt ends", fontsize=11, loc="left")
     handles, names = ax.get_legend_handles_labels()
     fig.legend(handles, names, ncol=6, fontsize=8, frameon=False, loc="lower center")
-    fig.tight_layout(rect=[0, 0.9 / fig_h, 1, 1])
+    fig.tight_layout(rect=[0, 0.45 / fig_h, 1, 1])
     out = ROOT / "results" / "ladder.png"
     fig.savefig(out, bbox_inches="tight")
     print("wrote", out)

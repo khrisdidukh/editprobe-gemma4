@@ -1,0 +1,47 @@
+[1/35] httpx_byte_chunker               tests_fail             tier=whole_file tok=391  78.8s  resolved so far 0
+[2/35] httpx_cookie_domain              pass                   tier=whole_file tok=441  83.8s  resolved so far 1
+[3/35] httpx_line_decoder               tests_fail             tier=whole_file tok=545 102.0s  resolved so far 1
+[4/35] httpx_multipart_boundary         pass                   tier=whole_file tok=319  58.9s  resolved so far 2
+[5/35] httpx_normalize_port             pass                   tier=whole_file tok=417  78.1s  resolved so far 3
+[6/35] httpx_obfuscate_headers          pass                   tier=whole_file tok=296  54.9s  resolved so far 4
+[7/35] httpx_peek_filelike_length       noop_edit              tier=whole_file tok=301  56.7s  resolved so far 4
+[8/35] httpx_primitive_value            pass                   tier=whole_file tok=203  38.3s  resolved so far 5
+Traceback (most recent call last):
+  File "/home/claude/kaggle-gemma4/harness/run.py", line 447, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/kaggle-gemma4/harness/run.py", line 435, in main
+    rec = evaluate(tasks_dir / tid, a.protocol, max_tokens, a.thinking, a.hint)
+  File "/home/claude/kaggle-gemma4/harness/run.py", line 282, in evaluate
+    resp = call_model(messages, tools, max_tokens, thinking)
+  File "/home/claude/kaggle-gemma4/harness/run.py", line 131, in call_model
+    with urllib.request.urlopen(req, timeout=3600) as r:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/urllib/request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/urllib/request.py", line 489, in open
+    response = self._open(req, data)
+  File "/usr/local/lib/python3.13/urllib/request.py", line 506, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/usr/local/lib/python3.13/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/usr/local/lib/python3.13/urllib/request.py", line 1360, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/urllib/request.py", line 1335, in do_open
+    r = h.getresponse()
+  File "/usr/local/lib/python3.13/http/client.py", line 1478, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/http/client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/http/client.py", line 312, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+                             " response")
+http.client.RemoteDisconnected: Remote end closed connection without response
+[9/35] httpx_same_origin                noop_edit              tier=whole_file tok=416 140.2s  resolved so far 0
+[10/35] httpx_text_chunker               pass                   tier=whole_file tok=467 150.3s  resolved so far 1
+[11/35] httpx_timeout                    pass                   tier=whole_file tok=829 269.1s  resolved so far 2

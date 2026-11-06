@@ -7,3 +7,4 @@
 {"model": "e2b", "protocol": "edit_file_v", "task": "httpx_timeout", "repair_info": {"head": 16, "tail": 14}, "repaired": "tests_fail", "tests": {"passed": ["test_errors_and_copy", "test_none_default"], "failed": ["test_default_applies_to_read", "test_single_value"], "f2p_ok": false, "p2p_ok": true}}
 {"model": "e2b", "protocol": "edit_file_v", "task": "req_parse_header_links", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
 {"model": "e2b", "protocol": "edit_file_v", "task": "rich_markup_escape", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
+{"model": "e4b", "protocol": "edit_file", "task": "req_super_len", "repair_info": {"head": 7, "tail": 2}, "repaired": "tests_fail", "tests": {"passed": ["test_bytesio_full", "test_restores_position", "test_str_and_bytes"], "failed": ["test_partially_read"], "f2p_ok": false, "p2p_ok": true}}
