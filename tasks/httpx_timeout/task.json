@@ -1,0 +1,23 @@
+{
+  "id": "httpx_timeout",
+  "source": "httpx/_config.py::Timeout",
+  "problem_statement": "Timeout(connect=5) with a default timeout ignores the default for other phases\n\n```python\n>>> t = Timeout(10.0, connect=5.0)\n>>> t.read\nNone\n```\n\nExpected `10.0`. When a positional default is given, all unspecified phases should take it.",
+  "fail_to_pass": [
+    "test_default_applies_to_read",
+    "test_single_value"
+  ],
+  "pass_to_pass": [
+    "test_errors_and_copy",
+    "test_none_default"
+  ],
+  "gold_patch_old": "            self.read = None if isinstance(read, UnsetType) else read\n",
+  "gold_patch_new": "            self.read = timeout if isinstance(read, UnsetType) else read\n",
+  "buggy_lines": [
+    69
+  ],
+  "gold_lines": [
+    69
+  ],
+  "buggy_line_count": 97,
+  "gold_line_count": 97
+}

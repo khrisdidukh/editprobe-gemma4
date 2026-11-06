@@ -1,0 +1,23 @@
+{
+  "id": "httpx_line_decoder",
+  "source": "httpx/_decoders.py::LineDecoder",
+  "problem_statement": "iter_lines() loses the last line when the body has no trailing newline\n\n```python\n>>> d = LineDecoder()\n>>> d.decode(\"a\\nb\\nc\")\n['a', 'b']\n>>> d.flush()\n[]\n```\n\nThe final `\"c\"` never comes out. If the body ends with `\\n` everything is fine.",
+  "fail_to_pass": [
+    "test_no_trailing_newline",
+    "test_split_across_chunks"
+  ],
+  "pass_to_pass": [
+    "test_crlf_across_chunks",
+    "test_trailing_newline"
+  ],
+  "gold_patch_old": "    def flush(self) -> List[str]:\n        if not self.trailing_cr:\n            return []\n",
+  "gold_patch_new": "    def flush(self) -> List[str]:\n        if not self.buffer and not self.trailing_cr:\n            return []\n",
+  "buggy_lines": [
+    55
+  ],
+  "gold_lines": [
+    55
+  ],
+  "buggy_line_count": 61,
+  "gold_line_count": 61
+}

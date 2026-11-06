@@ -1,0 +1,23 @@
+{
+  "id": "req_parse_dict_header",
+  "source": "requests/utils.py::parse_dict_header",
+  "problem_statement": "parse_dict_header mangles values that contain '='\n\n```python\n>>> parse_dict_header('token=\"abc==\"')\n{'token': 'abc'}\n```\n\nBase64-padded values lose their trailing `==`. Expected `{'token': 'abc=='}`. Keys without values still return None, which is fine.",
+  "fail_to_pass": [
+    "test_unquoted_equals",
+    "test_value_with_equals"
+  ],
+  "pass_to_pass": [
+    "test_no_value",
+    "test_plain"
+  ],
+  "gold_patch_old": "        name, value = item.split(\"=\")[:2]\n",
+  "gold_patch_new": "        name, value = item.split(\"=\", 1)\n",
+  "buggy_lines": [
+    42
+  ],
+  "gold_lines": [
+    42
+  ],
+  "buggy_line_count": 46,
+  "gold_line_count": 46
+}

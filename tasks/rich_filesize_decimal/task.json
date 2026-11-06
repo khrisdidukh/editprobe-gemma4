@@ -1,0 +1,23 @@
+{
+  "id": "rich_filesize_decimal",
+  "source": "rich/filesize.py::decimal",
+  "problem_statement": "filesize.decimal shows wrong unit for exact kilobytes\n\n```python\n>>> decimal(1000)\n'1000 bytes'\n>>> decimal(1000000)\n'1000.0 kB'\n```\n\nExpected `'1.0 kB'` and `'1.0 MB'`. Values just above the boundary (1001) are formatted correctly.",
+  "fail_to_pass": [
+    "test_exact_kb"
+  ],
+  "pass_to_pass": [
+    "test_bytes",
+    "test_pick_unit",
+    "test_precision"
+  ],
+  "gold_patch_old": "    elif size <= base:\n        return \"{:,} bytes\".format(size)\n",
+  "gold_patch_new": "    elif size < base:\n        return \"{:,} bytes\".format(size)\n",
+  "buggy_lines": [
+    16
+  ],
+  "gold_lines": [
+    16
+  ],
+  "buggy_line_count": 71,
+  "gold_line_count": 71
+}

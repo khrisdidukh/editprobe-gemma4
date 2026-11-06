@@ -1,0 +1,27 @@
+{
+  "id": "httpx_peek_filelike_length",
+  "source": "httpx/_utils.py::peek_filelike_length",
+  "problem_statement": "Content-Length wrong for a file opened and partly read\n\n```python\n>>> f = io.BytesIO(b\"0123456789\")\n>>> f.read(3)\n>>> peek_filelike_length(f)\n10\n```\n\nExpected 7 (the bytes that will actually be sent). The function should also leave the position unchanged, which it does.",
+  "fail_to_pass": [
+    "test_partially_read"
+  ],
+  "pass_to_pass": [
+    "test_fresh",
+    "test_not_seekable",
+    "test_to_bytes"
+  ],
+  "gold_patch_old": "    return length\n",
+  "gold_patch_new": "    try:\n        offset = stream.tell()\n    except (AttributeError, OSError):\n        return length\n    return length - offset\n",
+  "buggy_lines": [
+    27
+  ],
+  "gold_lines": [
+    27,
+    28,
+    29,
+    30,
+    31
+  ],
+  "buggy_line_count": 31,
+  "gold_line_count": 35
+}

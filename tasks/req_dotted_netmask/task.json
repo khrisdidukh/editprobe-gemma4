@@ -1,0 +1,23 @@
+{
+  "id": "req_dotted_netmask",
+  "source": "requests/utils.py::dotted_netmask, address_in_network",
+  "problem_statement": "address_in_network gives wrong answers for /24 networks\n\n```python\n>>> address_in_network('192.168.1.1', '192.168.1.0/24')\nFalse\n>>> dotted_netmask(24)\n'255.255.254.0'\n```\n\nThe netmask for /24 should be 255.255.255.0 and the address should be reported as inside the network.",
+  "fail_to_pass": [
+    "test_netmask_24",
+    "test_netmask_other"
+  ],
+  "pass_to_pass": [
+    "test_in_network",
+    "test_is_ipv4"
+  ],
+  "gold_patch_old": "    bits = 0xFFFFFFFF ^ (1 << 33 - mask) - 1\n",
+  "gold_patch_new": "    bits = 0xFFFFFFFF ^ (1 << 32 - mask) - 1\n",
+  "buggy_lines": [
+    12
+  ],
+  "gold_lines": [
+    12
+  ],
+  "buggy_line_count": 39,
+  "gold_line_count": 39
+}

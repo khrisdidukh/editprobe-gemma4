@@ -1,0 +1,21 @@
+{
+  "id": "httpx_byte_chunker",
+  "source": "httpx/_decoders.py::ByteChunker",
+  "problem_statement": "ByteChunker emits chunks larger than chunk_size\n\n```python\n>>> c = ByteChunker(chunk_size=3)\n>>> c.decode(b\"abcdefgh\")\n[b'abc', b'def']\n>>> c.decode(b\"ij\")\n[b'ghij']\n```\n\nThe second call returned a 4-byte chunk although `chunk_size=3`. Expected `[b'ghi']` and then `b'j'` on flush.",
+  "fail_to_pass": [
+    "test_remainder_carried"
+  ],
+  "pass_to_pass": [
+    "test_exact",
+    "test_none_chunk_size",
+    "test_small_pieces"
+  ],
+  "gold_patch_old": "                self._buffer.write(chunks[-1])\n                self._buffer.truncate()\n                return chunks[:-1]\n",
+  "gold_patch_new": "                self._buffer.seek(0)\n                self._buffer.write(chunks[-1])\n                self._buffer.truncate()\n                return chunks[:-1]\n",
+  "buggy_lines": [],
+  "gold_lines": [
+    30
+  ],
+  "buggy_line_count": 40,
+  "gold_line_count": 41
+}

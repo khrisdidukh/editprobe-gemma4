@@ -1,0 +1,24 @@
+{
+  "id": "httpx_normalize_port",
+  "source": "httpx/_urlparse.py::normalize_port",
+  "problem_statement": "Default port not removed for https URLs\n\n`normalize_port(\"443\", \"https\")` returns `443` but should return `None`, since 443 is the default for https. For http the default port 80 is removed correctly. The result is that `https://example.com:443/` and `https://example.com/` compare as different URLs.",
+  "fail_to_pass": [
+    "test_https_default_removed",
+    "test_port_or_default"
+  ],
+  "pass_to_pass": [
+    "test_http_default_removed",
+    "test_invalid",
+    "test_non_default_kept"
+  ],
+  "gold_patch_old": "    \"http\": 80,\n    \"https\": 433,\n    \"ws\": 80,\n",
+  "gold_patch_new": "    \"http\": 80,\n    \"https\": 443,\n    \"ws\": 80,\n",
+  "buggy_lines": [
+    11
+  ],
+  "gold_lines": [
+    11
+  ],
+  "buggy_line_count": 44,
+  "gold_line_count": 44
+}

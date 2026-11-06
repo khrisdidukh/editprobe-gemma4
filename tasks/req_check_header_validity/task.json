@@ -1,0 +1,24 @@
+{
+  "id": "req_check_header_validity",
+  "source": "requests/utils.py::check_header_validity",
+  "problem_statement": "Header values with leading whitespace are accepted\n\n`check_header_validity((\"X-Test\", \" value\"))` should raise `InvalidHeader` (leading whitespace in a header value is rejected to prevent header injection), but it passes silently. Header *names* with spaces are still rejected properly.",
+  "fail_to_pass": [
+    "test_colon_in_value_ok"
+  ],
+  "pass_to_pass": [
+    "test_bad_name",
+    "test_bytes_ok",
+    "test_leading_space_value_rejected",
+    "test_newline_rejected"
+  ],
+  "gold_patch_old": "    _validate_header_part(header, name, 0)\n    _validate_header_part(header, value, 0)\n",
+  "gold_patch_new": "    _validate_header_part(header, name, 0)\n    _validate_header_part(header, value, 1)\n",
+  "buggy_lines": [
+    32
+  ],
+  "gold_lines": [
+    32
+  ],
+  "buggy_line_count": 51,
+  "gold_line_count": 51
+}

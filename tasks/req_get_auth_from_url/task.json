@@ -1,0 +1,23 @@
+{
+  "id": "req_get_auth_from_url",
+  "source": "requests/utils.py::get_auth_from_url",
+  "problem_statement": "Credentials with percent-encoded characters are sent wrong\n\nWhen the URL contains an encoded password, e.g. `http://user:p%40ss@host/`, the password sent is `p%40ss` instead of `p@ss`. The username is decoded correctly. So only the password is left encoded.",
+  "fail_to_pass": [
+    "test_encoded_password"
+  ],
+  "pass_to_pass": [
+    "test_defragauth",
+    "test_encoded_user",
+    "test_no_auth"
+  ],
+  "gold_patch_old": "        auth = (unquote(parsed.username), parsed.password)\n",
+  "gold_patch_new": "        auth = (unquote(parsed.username), unquote(parsed.password))\n",
+  "buggy_lines": [
+    13
+  ],
+  "gold_lines": [
+    13
+  ],
+  "buggy_line_count": 35,
+  "gold_line_count": 35
+}

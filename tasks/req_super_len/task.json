@@ -1,0 +1,23 @@
+{
+  "id": "req_super_len",
+  "source": "requests/utils.py::super_len",
+  "problem_statement": "Content-Length wrong for file objects not at position 0\n\nIf I open a file, read part of it, and pass the object as the body, the computed length is the whole file size, not the remaining bytes:\n\n```python\n>>> f = io.BytesIO(b\"0123456789\")\n>>> f.read(4)\n>>> super_len(f)\n10\n```\n\nExpected 6. The server then waits for 4 bytes that never come.",
+  "fail_to_pass": [
+    "test_partially_read"
+  ],
+  "pass_to_pass": [
+    "test_bytesio_full",
+    "test_restores_position",
+    "test_str_and_bytes"
+  ],
+  "gold_patch_old": "    return max(0, total_length)\n",
+  "gold_patch_new": "    return max(0, total_length - current_position)\n",
+  "buggy_lines": [
+    55
+  ],
+  "gold_lines": [
+    55
+  ],
+  "buggy_line_count": 55,
+  "gold_line_count": 55
+}

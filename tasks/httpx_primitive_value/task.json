@@ -1,0 +1,26 @@
+{
+  "id": "httpx_primitive_value",
+  "source": "httpx/_utils.py::primitive_value_to_str",
+  "problem_statement": "Boolean query params are sent as \"True\"/\"False\"\n\n```python\n>>> primitive_value_to_str(True)\n'True'\n```\n\nExpected `'true'` (lowercase, as before). `None` correctly becomes `''`.",
+  "fail_to_pass": [
+    "test_bools",
+    "test_query"
+  ],
+  "pass_to_pass": [
+    "test_none_and_numbers"
+  ],
+  "gold_patch_old": "    if value is None:\n",
+  "gold_patch_new": "    if value is True:\n        return \"true\"\n    elif value is False:\n        return \"false\"\n    elif value is None:\n",
+  "buggy_lines": [
+    12
+  ],
+  "gold_lines": [
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "buggy_line_count": 19,
+  "gold_line_count": 23
+}

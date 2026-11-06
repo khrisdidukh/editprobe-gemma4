@@ -1,0 +1,23 @@
+{
+  "id": "rich_chop_cells",
+  "source": "rich/cells.py::chop_cells",
+  "problem_statement": "chop_cells drops the final partial chunk\n\n```python\n>>> chop_cells(\"abcdefgh\", 3)\n['abc', 'def']\n```\n\n`'gh'` is lost, so the last line of wrapped text disappears. With a string whose length is a multiple of the width it works.",
+  "fail_to_pass": [
+    "test_partial_tail",
+    "test_wide_chars"
+  ],
+  "pass_to_pass": [
+    "test_exact_multiple",
+    "test_set_cell_size"
+  ],
+  "gold_patch_old": "    return [\"\".join(line) for line in lines if len(line) == width]\n",
+  "gold_patch_new": "    return [\"\".join(line) for line in lines]\n",
+  "buggy_lines": [
+    89
+  ],
+  "gold_lines": [
+    89
+  ],
+  "buggy_line_count": 89,
+  "gold_line_count": 89
+}

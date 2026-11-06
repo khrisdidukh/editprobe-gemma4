@@ -1,0 +1,23 @@
+{
+  "id": "req_get_encoding_from_headers",
+  "source": "requests/utils.py::get_encoding_from_headers",
+  "problem_statement": "Charset from Content-Type is ignored\n\n```python\n>>> get_encoding_from_headers({'content-type': 'text/html; charset=iso-8859-1'})\n'ISO-8859-1'\n```\n\nThat is the fallback value for `text/*`, not the charset the server sent. A header like `application/json; charset=utf-16` also returns `utf-8`. The charset parameter should win.",
+  "fail_to_pass": [
+    "test_charset_key_case",
+    "test_parse_params"
+  ],
+  "pass_to_pass": [
+    "test_charset_wins",
+    "test_fallbacks"
+  ],
+  "gold_patch_old": "            params_dict[key] = value.lower()\n",
+  "gold_patch_new": "            params_dict[key.lower()] = value\n",
+  "buggy_lines": [
+    22
+  ],
+  "gold_lines": [
+    22
+  ],
+  "buggy_line_count": 50,
+  "gold_line_count": 50
+}

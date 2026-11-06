@@ -1,0 +1,23 @@
+{
+  "id": "rich_color_triplet",
+  "source": "rich/color_triplet.py::ColorTriplet",
+  "problem_statement": "ColorTriplet.hex produces 5-digit colours for small components\n\n```python\n>>> ColorTriplet(0, 128, 255).hex\n'#080ff'\n```\n\nExpected `'#0080ff'`. Components below 16 are not zero-padded. `rgb` and `normalized` are fine.",
+  "fail_to_pass": [
+    "test_hex_padding"
+  ],
+  "pass_to_pass": [
+    "test_hex_plain",
+    "test_parse_blend",
+    "test_rgb_normalized"
+  ],
+  "gold_patch_old": "        return f\"#{red:x}{green:x}{blue:x}\"\n",
+  "gold_patch_new": "        return f\"#{red:02x}{green:02x}{blue:02x}\"\n",
+  "buggy_lines": [
+    18
+  ],
+  "gold_lines": [
+    18
+  ],
+  "buggy_line_count": 61,
+  "gold_line_count": 61
+}

@@ -1,0 +1,23 @@
+{
+  "id": "rich_ansi_strip",
+  "source": "rich/ansi.py (simplified)::strip_ansi",
+  "problem_statement": "strip_ansi leaves OSC hyperlink sequences in the output\n\n```python\n>>> strip_ansi(\"\\x1b]8;;http://x\\x1b\\\\link\\x1b]8;;\\x1b\\\\\")\n'\\x1b]8;;http://x\\x1b\\\\link\\x1b]8;;\\x1b\\\\'\n```\n\nExpected `'link'`. Colour codes such as `\\x1b[31m` are stripped correctly.",
+  "fail_to_pass": [
+    "test_osc_bel",
+    "test_osc_hyperlink"
+  ],
+  "pass_to_pass": [
+    "test_csi_colour",
+    "test_plain"
+  ],
+  "gold_patch_old": "re_ansi = re.compile(f\"(?:{_CSI})\")\n",
+  "gold_patch_new": "re_ansi = re.compile(f\"(?:{_CSI})|(?:{_OSC})\")\n",
+  "buggy_lines": [
+    8
+  ],
+  "gold_lines": [
+    8
+  ],
+  "buggy_line_count": 18,
+  "gold_line_count": 18
+}

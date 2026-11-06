@@ -1,0 +1,23 @@
+{
+  "id": "rich_style_parse_color",
+  "source": "rich/color.py (simplified)::parse_color",
+  "problem_statement": "Hex colours with uppercase digits are rejected\n\n```python\n>>> parse_color(\"#FF8800\")\nColorParseError: '#FF8800' is not a valid color\n```\n\nLowercase `#ff8800` works. CSS hex colours are case-insensitive, so uppercase should be accepted too.",
+  "fail_to_pass": [
+    "test_standard_and_number"
+  ],
+  "pass_to_pass": [
+    "test_lowercase_hex",
+    "test_rgb_and_errors",
+    "test_uppercase_hex"
+  ],
+  "gold_patch_old": "    original_color = color\n    color = color.strip()\n",
+  "gold_patch_new": "    original_color = color\n    color = color.lower().strip()\n",
+  "buggy_lines": [
+    40
+  ],
+  "gold_lines": [
+    40
+  ],
+  "buggy_line_count": 67,
+  "gold_line_count": 67
+}

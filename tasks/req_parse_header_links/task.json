@@ -1,0 +1,23 @@
+{
+  "id": "req_parse_header_links",
+  "source": "requests/utils.py::parse_header_links",
+  "problem_statement": "`parse_header_links` drops the last parameter of a link\n\nWhen a Link header has several parameters, the last one is missing from the result:\n\n```python\n>>> parse_header_links('<http://example.com/page/2>; rel=\"next\"; type=\"text/html\"')\n[{'url': 'http://example.com/page/2', 'rel': 'next'}]\n```\n\nI expected `'type': 'text/html'` to be in the dict as well. A header with a single parameter works fine.",
+  "fail_to_pass": [
+    "test_multiple_links",
+    "test_single_param",
+    "test_two_params"
+  ],
+  "pass_to_pass": [
+    "test_empty"
+  ],
+  "gold_patch_old": "        for param in params.split(\";\")[:-1]:\n            try:\n                key, value = param.split(\"=\")",
+  "gold_patch_new": "        for param in params.split(\";\"):\n            try:\n                key, value = param.split(\"=\")",
+  "buggy_lines": [
+    28
+  ],
+  "gold_lines": [
+    28
+  ],
+  "buggy_line_count": 38,
+  "gold_line_count": 38
+}

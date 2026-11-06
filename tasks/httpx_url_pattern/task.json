@@ -1,0 +1,23 @@
+{
+  "id": "httpx_url_pattern",
+  "source": "httpx/_utils.py::URLPattern",
+  "problem_statement": "Proxy pattern \"http://\" matches https URLs\n\nA proxy configured only for `\"http://\"` is also used for `https://example.com`. The pattern should match only the http scheme. Patterns with host and port behave correctly.",
+  "fail_to_pass": [
+    "test_http_pattern_not_https"
+  ],
+  "pass_to_pass": [
+    "test_all",
+    "test_host_port",
+    "test_wildcard_and_priority"
+  ],
+  "gold_patch_old": "        self.scheme = \"\" if scheme in (\"all\", \"http\") else scheme\n",
+  "gold_patch_new": "        self.scheme = \"\" if scheme == \"all\" else scheme\n",
+  "buggy_lines": [
+    44
+  ],
+  "gold_lines": [
+    44
+  ],
+  "buggy_line_count": 85,
+  "gold_line_count": 85
+}

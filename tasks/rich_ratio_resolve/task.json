@@ -1,0 +1,23 @@
+{
+  "id": "rich_ratio_resolve",
+  "source": "rich/_ratio.py::ratio_resolve",
+  "problem_statement": "Layout with a fixed-size and a flexible region overflows\n\nGiven a total of 10 and two edges, one with `size=3` and one flexible with `ratio=1`, `ratio_resolve` returns `[3, 10]` — the flexible region gets the whole total instead of the remaining 7, so the layout is 3 rows too tall.",
+  "fail_to_pass": [
+    "test_fixed_plus_flexible",
+    "test_minimum"
+  ],
+  "pass_to_pass": [
+    "test_rounding",
+    "test_two_flexible"
+  ],
+  "gold_patch_old": "        remaining = total\n",
+  "gold_patch_new": "        remaining = total - sum(size or 0 for size in sizes)\n",
+  "buggy_lines": [
+    49
+  ],
+  "gold_lines": [
+    49
+  ],
+  "buggy_line_count": 77,
+  "gold_line_count": 77
+}

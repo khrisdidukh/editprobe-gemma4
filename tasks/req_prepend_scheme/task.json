@@ -1,0 +1,22 @@
+{
+  "id": "req_prepend_scheme",
+  "source": "requests/utils.py::prepend_scheme_if_needed",
+  "problem_statement": "prepend_scheme_if_needed loses the port\n\n```python\n>>> prepend_scheme_if_needed('example.com:8080/path', 'http')\n'http://example.com/path'\n```\n\nThe `:8080` disappears. URLs that already have a scheme are returned unchanged, which is correct.",
+  "fail_to_pass": [
+    "test_auth",
+    "test_port_kept",
+    "test_scheme_present"
+  ],
+  "pass_to_pass": [
+    "test_no_port"
+  ],
+  "gold_patch_old": "    if scheme is None:\n",
+  "gold_patch_new": "    if port:\n        host = f\"{host}:{port}\"\n    if scheme is None:\n",
+  "buggy_lines": [],
+  "gold_lines": [
+    37,
+    38
+  ],
+  "buggy_line_count": 42,
+  "gold_line_count": 44
+}

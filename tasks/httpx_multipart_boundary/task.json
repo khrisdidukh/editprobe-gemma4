@@ -1,0 +1,23 @@
+{
+  "id": "httpx_multipart_boundary",
+  "source": "httpx/_multipart.py::get_multipart_boundary_from_content_type",
+  "problem_statement": "Multipart boundary with quotes is not parsed\n\n```python\n>>> get_multipart_boundary_from_content_type(b'multipart/form-data; boundary=\"abc123\"')\nb'\"abc123\"'\n```\n\nThe quotes are kept, so the body is encoded with a boundary that does not match the header. An unquoted boundary works.",
+  "fail_to_pass": [
+    "test_quoted"
+  ],
+  "pass_to_pass": [
+    "test_form_param",
+    "test_none",
+    "test_unquoted"
+  ],
+  "gold_patch_old": "                return section.strip()[len(b\"boundary=\") :]\n",
+  "gold_patch_new": "                return section.strip()[len(b\"boundary=\") :].strip(b'\"')\n",
+  "buggy_lines": [
+    15
+  ],
+  "gold_lines": [
+    15
+  ],
+  "buggy_line_count": 28,
+  "gold_line_count": 28
+}

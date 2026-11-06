@@ -1,0 +1,23 @@
+{
+  "id": "req_unquote_unreserved",
+  "source": "requests/utils.py::unquote_unreserved, requote_uri",
+  "problem_statement": "requote_uri un-escapes reserved characters\n\n```python\n>>> requote_uri('http://example.com/a%2Fb')\n'http://example.com/a/b'\n```\n\n`%2F` is an escaped slash and must stay escaped, otherwise the path changes meaning. Unreserved characters such as `%7E` should still be un-escaped to `~`.",
+  "fail_to_pass": [
+    "test_keeps_encoded_slash"
+  ],
+  "pass_to_pass": [
+    "test_invalid_escape",
+    "test_quotes_illegal",
+    "test_unreserved_unescaped"
+  ],
+  "gold_patch_old": "            if c in UNRESERVED_SET or c == \"/\":\n                parts[i] = c + parts[i][2:]\n            else:\n                parts[i] = f\"%{parts[i]}\"\n",
+  "gold_patch_new": "            if c in UNRESERVED_SET:\n                parts[i] = c + parts[i][2:]\n            else:\n                parts[i] = f\"%{parts[i]}\"\n",
+  "buggy_lines": [
+    27
+  ],
+  "gold_lines": [
+    27
+  ],
+  "buggy_line_count": 55,
+  "gold_line_count": 55
+}

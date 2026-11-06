@@ -1,0 +1,23 @@
+{
+  "id": "rich_lookup_pick_bool",
+  "source": "rich/_pick.py::pick_bool",
+  "problem_statement": "pick_bool returns None when the first value is False\n\n```python\n>>> pick_bool(False, True)\nTrue\n```\n\nExpected `False`: the first value that is not `None` must win. With `pick_bool(None, True)` the result is correctly `True`, so only explicit `False` is skipped.",
+  "fail_to_pass": [
+    "test_false_first"
+  ],
+  "pass_to_pass": [
+    "test_all_none",
+    "test_none_skipped",
+    "test_pick_str"
+  ],
+  "gold_patch_old": "    for value in values:\n        if value:\n            return value\n    return bool(value)\n",
+  "gold_patch_new": "    for value in values:\n        if value is not None:\n            return value\n    return bool(value)\n",
+  "buggy_lines": [
+    15
+  ],
+  "gold_lines": [
+    15
+  ],
+  "buggy_line_count": 25,
+  "gold_line_count": 25
+}

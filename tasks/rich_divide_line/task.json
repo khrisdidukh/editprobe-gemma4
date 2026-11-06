@@ -1,0 +1,24 @@
+{
+  "id": "rich_divide_line",
+  "source": "rich/_wrap.py::divide_line",
+  "problem_statement": "Word wrapping breaks one character too early\n\n```python\n>>> divide_line(\"foo bar baz\", 7)\n[4]\n```\n\n\"foo bar\" is exactly 7 cells and should fit on the first line, so the expected result is `[8]` (break before \"baz\"). It looks like a word that exactly fills the width is pushed to the next line.",
+  "fail_to_pass": [
+    "test_exact_fit"
+  ],
+  "pass_to_pass": [
+    "test_basic",
+    "test_fold_long",
+    "test_no_break",
+    "test_words"
+  ],
+  "gold_patch_old": "        word_fits_remaining_space = remaining_space > word_length\n",
+  "gold_patch_new": "        word_fits_remaining_space = remaining_space >= word_length\n",
+  "buggy_lines": [
+    63
+  ],
+  "gold_lines": [
+    63
+  ],
+  "buggy_line_count": 94,
+  "gold_line_count": 94
+}

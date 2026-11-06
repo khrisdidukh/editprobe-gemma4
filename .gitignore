@@ -1,0 +1,8 @@
+models/
+.tmp_llamacpp/
+.tmp_refs/
+.tmp_repos/
+__pycache__/
+*.pyc
+.pytest_cache/
+logs/server_*.log

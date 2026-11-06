@@ -1,0 +1,23 @@
+{
+  "id": "httpx_cookie_domain",
+  "source": "httpx/_models.py (simplified)::Cookies.set / cookie domain match",
+  "problem_statement": "Cookies set for a parent domain are not sent to subdomains\n\nA cookie set with `domain=\"example.com\"` is sent to `example.com` but not to `api.example.com`. Per RFC 6265 a domain cookie should match the domain itself and all its subdomains. Cookies without a domain (host-only) should still match only the exact host.",
+  "fail_to_pass": [
+    "test_subdomain_match"
+  ],
+  "pass_to_pass": [
+    "test_host_only",
+    "test_other_domain",
+    "test_path"
+  ],
+  "gold_patch_old": "        return host == self.domain\n",
+  "gold_patch_new": "        return host == self.domain or host.endswith(\".\" + self.domain)\n",
+  "buggy_lines": [
+    15
+  ],
+  "gold_lines": [
+    15
+  ],
+  "buggy_line_count": 41,
+  "gold_line_count": 41
+}

@@ -1,0 +1,24 @@
+{
+  "id": "req_guess_json_utf",
+  "source": "requests/utils.py::guess_json_utf",
+  "problem_statement": "guess_json_utf returns None for UTF-16-LE JSON without BOM\n\n```python\n>>> guess_json_utf('{\"a\": 1}'.encode('utf-16-le'))\n>>>\n```\n\nReturns None, so the response body cannot be decoded. UTF-16-BE without BOM is detected correctly as 'utf-16-be'. Expected 'utf-16-le'.",
+  "fail_to_pass": [
+    "test_utf16_le_no_bom"
+  ],
+  "pass_to_pass": [
+    "test_bom",
+    "test_utf16_be_no_bom",
+    "test_utf32",
+    "test_utf8"
+  ],
+  "gold_patch_old": "        if sample[1::3] == _null2:  # 2nd and 4th are null\n",
+  "gold_patch_new": "        if sample[1::2] == _null2:  # 2nd and 4th are null\n",
+  "buggy_lines": [
+    30
+  ],
+  "gold_lines": [
+    30
+  ],
+  "buggy_line_count": 39,
+  "gold_line_count": 39
+}

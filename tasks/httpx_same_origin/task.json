@@ -1,0 +1,23 @@
+{
+  "id": "httpx_same_origin",
+  "source": "httpx/_client.py (simplified)::same_origin, is_https_redirect",
+  "problem_statement": "Authorization header is dropped on http -> https redirect to the same host\n\nRedirecting `http://example.com/` to `https://example.com/` should keep the Authorization header (this is the one cross-scheme case that is allowed), but it is being stripped. Redirects to a different host correctly strip it.",
+  "fail_to_pass": [
+    "test_https_upgrade_keeps_auth"
+  ],
+  "pass_to_pass": [
+    "test_explicit_443",
+    "test_other_host_strips",
+    "test_same_origin"
+  ],
+  "gold_patch_old": "        and location.scheme == \"https\"\n        and location.port == 443\n",
+  "gold_patch_new": "        and location.scheme == \"https\"\n        and port_or_default(location) == 443\n",
+  "buggy_lines": [
+    40
+  ],
+  "gold_lines": [
+    40
+  ],
+  "buggy_line_count": 52,
+  "gold_line_count": 52
+}

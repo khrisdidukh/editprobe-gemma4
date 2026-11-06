@@ -1,0 +1,23 @@
+{
+  "id": "rich_ratio_distribute",
+  "source": "rich/_ratio.py::ratio_distribute",
+  "problem_statement": "ratio_distribute does not respect minimums\n\n```python\n>>> ratio_distribute(10, [1, 1], minimums=[8, 1])\n[5, 5]\n```\n\nThe first column has a minimum of 8, so I expect `[8, 2]`. Without minimums the split is fine.",
+  "fail_to_pass": [
+    "test_minimums",
+    "test_sum"
+  ],
+  "pass_to_pass": [
+    "test_no_minimums",
+    "test_reduce"
+  ],
+  "gold_patch_old": "            distributed = ceil(ratio * total_remaining / total_ratio)\n",
+  "gold_patch_new": "            distributed = max(minimum, ceil(ratio * total_remaining / total_ratio))\n",
+  "buggy_lines": [
+    32
+  ],
+  "gold_lines": [
+    32
+  ],
+  "buggy_line_count": 70,
+  "gold_line_count": 70
+}

@@ -1,0 +1,23 @@
+{
+  "id": "rich_markup_escape",
+  "source": "rich/markup.py::escape",
+  "problem_statement": "markup.escape does not escape closing tags\n\n```python\n>>> escape(\"[/bold]\")\n'[/bold]'\n```\n\nRendering the escaped string still closes the current style. Opening tags like `[bold]` are escaped to `\\[bold]` as expected, so only the `[/...]` form is affected.",
+  "fail_to_pass": [
+    "test_escape_closing"
+  ],
+  "pass_to_pass": [
+    "test_escape_opening",
+    "test_plain_untouched",
+    "test_strip_tags"
+  ],
+  "gold_patch_old": "    _escape=re.compile(r\"(\\\\*)(\\[[a-z#@][^[]*?])\").sub,\n",
+  "gold_patch_new": "    _escape=re.compile(r\"(\\\\*)(\\[[a-z#/@][^[]*?])\").sub,\n",
+  "buggy_lines": [
+    12
+  ],
+  "gold_lines": [
+    12
+  ],
+  "buggy_line_count": 47,
+  "gold_line_count": 47
+}

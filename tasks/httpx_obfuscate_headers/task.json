@@ -1,0 +1,23 @@
+{
+  "id": "httpx_obfuscate_headers",
+  "source": "httpx/_utils.py::obfuscate_sensitive_headers",
+  "problem_statement": "Proxy-Authorization is printed in clear text\n\nWhen logging request headers, `Authorization` is replaced with `[secure]`, but `Proxy-Authorization` is shown as-is, leaking proxy credentials in logs.",
+  "fail_to_pass": [
+    "test_proxy_auth_hidden"
+  ],
+  "pass_to_pass": [
+    "test_auth_hidden",
+    "test_bytes",
+    "test_others_untouched"
+  ],
+  "gold_patch_old": "SENSITIVE_HEADERS = {\"authorization\"}\n",
+  "gold_patch_new": "SENSITIVE_HEADERS = {\"authorization\", \"proxy-authorization\"}\n",
+  "buggy_lines": [
+    3
+  ],
+  "gold_lines": [
+    3
+  ],
+  "buggy_line_count": 25,
+  "gold_line_count": 25
+}

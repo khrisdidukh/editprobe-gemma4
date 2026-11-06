@@ -1,0 +1,23 @@
+{
+  "id": "req_iter_slices",
+  "source": "requests/utils.py::iter_slices",
+  "problem_statement": "iter_slices skips the tail of the string\n\n```python\n>>> list(iter_slices(\"abcdefg\", 3))\n['abc', 'def']\n```\n\nThe final `'g'` is missing. Every byte of the body must be yielded.",
+  "fail_to_pass": [
+    "test_tail_kept"
+  ],
+  "pass_to_pass": [
+    "test_exact",
+    "test_key_val_list",
+    "test_none_length"
+  ],
+  "gold_patch_old": "    while pos + slice_length <= len(string):\n",
+  "gold_patch_new": "    while pos < len(string):\n",
+  "buggy_lines": [
+    6
+  ],
+  "gold_lines": [
+    6
+  ],
+  "buggy_line_count": 37,
+  "gold_line_count": 37
+}

@@ -1,0 +1,23 @@
+{
+  "id": "rich_loop_last",
+  "source": "rich/_loop.py::loop_last",
+  "problem_statement": "loop_last never flags the last element\n\n```python\n>>> list(loop_last([1, 2, 3]))\n[(False, 1), (False, 2), (False, 3)]\n```\n\nThe last tuple should be `(True, 3)`. `loop_first` works. Table borders that depend on this draw the row separator after the final row.",
+  "fail_to_pass": [
+    "test_loop_last",
+    "test_loop_last_single"
+  ],
+  "pass_to_pass": [
+    "test_loop_first",
+    "test_loop_first_last"
+  ],
+  "gold_patch_old": "        previous_value = value\n    yield False, previous_value\n\n\ndef loop_first_last",
+  "gold_patch_new": "        previous_value = value\n    yield True, previous_value\n\n\ndef loop_first_last",
+  "buggy_lines": [
+    28
+  ],
+  "gold_lines": [
+    28
+  ],
+  "buggy_line_count": 43,
+  "gold_line_count": 43
+}

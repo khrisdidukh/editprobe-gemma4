@@ -1,0 +1,23 @@
+{
+  "id": "httpx_text_chunker",
+  "source": "httpx/_decoders.py::TextChunker",
+  "problem_statement": "iter_text(chunk_size=...) returns one chunk short\n\n```python\n>>> c = TextChunker(chunk_size=2)\n>>> c.decode(\"abcde\")\n['ab']\n>>> c.flush()\n['e']\n```\n\n`'cd'` is lost. Expected `['ab', 'cd']` then `['e']`.",
+  "fail_to_pass": [
+    "test_chunks"
+  ],
+  "pass_to_pass": [
+    "test_decoder",
+    "test_exact",
+    "test_none"
+  ],
+  "gold_patch_old": "                for i in range(0, len(value), self._chunk_size)\n            ]\n            if len(chunks[-1]) == self._chunk_size:\n                self._buffer.seek(0)\n                self._buffer.truncate()\n                return chunks\n            else:\n                self._buffer.seek(0)\n                self._buffer.write(chunks[-1])\n                self._buffer.truncate()\n                return chunks[:-2]\n",
+  "gold_patch_new": "                for i in range(0, len(value), self._chunk_size)\n            ]\n            if len(chunks[-1]) == self._chunk_size:\n                self._buffer.seek(0)\n                self._buffer.truncate()\n                return chunks\n            else:\n                self._buffer.seek(0)\n                self._buffer.write(chunks[-1])\n                self._buffer.truncate()\n                return chunks[:-1]\n",
+  "buggy_lines": [
+    33
+  ],
+  "gold_lines": [
+    33
+  ],
+  "buggy_line_count": 58,
+  "gold_line_count": 58
+}
