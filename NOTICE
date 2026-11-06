@@ -1,0 +1,15 @@
+EditProbe
+Copyright 2026 Khrystyna Didukh
+
+Task modules under tasks/ and bench/ are adapted (shortened, made standalone,
+and given an injected bug) from the following projects:
+
+- psf/requests (https://github.com/psf/requests), Apache License 2.0,
+  Copyright Kenneth Reitz and contributors.
+- Textualize/rich (https://github.com/Textualize/rich), MIT License,
+  Copyright (c) 2020 Will McGugan.
+- encode/httpx (https://github.com/encode/httpx), BSD 3-Clause License,
+  Copyright (c) 2019, Encode OSS Ltd.
+
+Their license texts apply to the adapted code. Everything else in this
+repository is licensed under the Apache License 2.0.

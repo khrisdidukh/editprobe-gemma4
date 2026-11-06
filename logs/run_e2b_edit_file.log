@@ -1,0 +1,10 @@
+[1/35] httpx_byte_chunker               syntax_error           tier=exact tok=175  19.4s  resolved so far 0
+[2/35] httpx_cookie_domain              tests_fail             tier=exact tok=227  24.1s  resolved so far 0
+[3/35] httpx_line_decoder               tests_fail             tier=exact tok=224  25.7s  resolved so far 0
+[4/35] httpx_multipart_boundary         tests_fail             tier=exact tok=180  18.8s  resolved so far 0
+[5/35] httpx_normalize_port             tests_fail             tier=exact tok=107  12.9s  resolved so far 0
+[6/35] httpx_obfuscate_headers          tests_fail             tier=exact tok=115  12.7s  resolved so far 0
+[7/35] httpx_peek_filelike_length       syntax_error           tier=exact tok=180  19.2s  resolved so far 0
+[8/35] httpx_primitive_value            pass                   tier=exact tok=86   9.9s  resolved so far 1
+[9/35] httpx_same_origin                pass                   tier=exact tok=165  18.6s  resolved so far 2
+[10/35] httpx_text_chunker               tests_fail             tier=exact tok=181  21.0s  resolved so far 2

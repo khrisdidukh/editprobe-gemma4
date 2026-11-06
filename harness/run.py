@@ -96,10 +96,18 @@ TOOLS = {
 TOOLS["edit_file_v"] = TOOLS["edit_file"]
 
 
-def build_messages(task: dict, src: str, protocol: str) -> list[dict]:
+def build_messages(task: dict, src: str, protocol: str, hint: bool = False) -> list[dict]:
+    hint_block = ""
+    if hint:
+        hint_block = (
+            "## Hint\n\nThe bug is in these lines:\n\n```python\n"
+            f"{task['gold_patch_old'].rstrip(chr(10))}\n```\n\nThey should become:\n\n```python\n"
+            f"{task['gold_patch_new'].rstrip(chr(10))}\n```\n\n"
+        )
     user = (
         f"## Problem statement\n\n{task['problem_statement']}\n\n"
         f"## File: src.py ({src.count(chr(10))} lines)\n\n```python\n{src}```\n\n"
+        f"{hint_block}"
         f"## Instructions\n\n{PROTOCOL_INSTRUCTIONS[protocol]}"
     )
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
@@ -229,12 +237,12 @@ def parse_tool_call(resp: dict, expected_name: str) -> tuple[str, dict | None, s
     return "ok", args, text
 
 
-def evaluate(task_dir: Path, protocol: str, max_tokens: int, thinking: bool) -> dict:
+def evaluate(task_dir: Path, protocol: str, max_tokens: int, thinking: bool, hint: bool = False) -> dict:
     meta = json.loads((task_dir / "task.json").read_text())
     src = (task_dir / "src.py").read_text()
     gold = (task_dir / "gold.py").read_text()
     tests = (task_dir / "test_task.py").read_text()
-    messages = build_messages(meta, src, protocol)
+    messages = build_messages(meta, src, protocol, hint)
     tools = TOOLS.get(protocol)
     resp = call_model(messages, tools, max_tokens, thinking)
     usage = resp.get("usage", {})
@@ -242,6 +250,7 @@ def evaluate(task_dir: Path, protocol: str, max_tokens: int, thinking: bool) -> 
     rec = {
         "task": meta["id"],
         "protocol": protocol,
+        "hint": hint,
         "finish_reason": resp["choices"][0].get("finish_reason"),
         "prompt_tokens": usage.get("prompt_tokens"),
         "completion_tokens": usage.get("completion_tokens"),
@@ -312,6 +321,12 @@ def evaluate(task_dir: Path, protocol: str, max_tokens: int, thinking: bool) -> 
         raise ValueError(protocol)
 
     rec["apply_ok"] = True
+    rec["candidate"] = candidate
+    if candidate == src:
+        rec["stage"] = "noop_edit"
+        rec["compiles"] = True
+        rec["lines_added"] = rec["lines_removed"] = rec["extraneous_lines"] = 0
+        return rec
     try:
         compile(candidate, "src.py", "exec")
         rec["compiles"] = True
@@ -328,7 +343,6 @@ def evaluate(task_dir: Path, protocol: str, max_tokens: int, thinking: bool) -> 
     rec["tests"] = {k: t[k] for k in ("rc", "passed", "failed", "f2p_ok", "p2p_ok", "resolved")}
     rec["resolved"] = t["resolved"]
     rec["stage"] = "pass" if t["resolved"] else ("tests_fail_regression" if t["f2p_ok"] and not t["p2p_ok"] else "tests_fail")
-    rec["candidate"] = candidate
     return rec
 
 
@@ -340,12 +354,13 @@ def main():
     ap.add_argument("--out", help="output JSONL (default results/<model>_<protocol>.jsonl)")
     ap.add_argument("--max-tokens", type=int, default=None)
     ap.add_argument("--thinking", action="store_true")
+    ap.add_argument("--hint", action="store_true", help="give the gold fix in words (pure edit-landing test)")
     ap.add_argument("--resume", action="store_true", help="skip tasks already in the output file")
     a = ap.parse_args()
 
     tasks_dir = ROOT / "tasks"
     ids = a.tasks or sorted(p.name for p in tasks_dir.iterdir() if p.is_dir())
-    out = Path(a.out) if a.out else ROOT / "results" / f"{a.model}_{a.protocol}{'_think' if a.thinking else ''}.jsonl"
+    out = Path(a.out) if a.out else ROOT / "results" / f"{a.model}_{a.protocol}{'_think' if a.thinking else ''}{'_hint' if a.hint else ''}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
     done = set()
     if a.resume and out.exists():
@@ -371,7 +386,7 @@ def main():
             if tid in done:
                 continue
             t0 = time.time()
-            rec = evaluate(tasks_dir / tid, a.protocol, max_tokens, a.thinking)
+            rec = evaluate(tasks_dir / tid, a.protocol, max_tokens, a.thinking, a.hint)
             rec["model"] = a.model
             rec["served_model"] = served
             rec["thinking"] = a.thinking
