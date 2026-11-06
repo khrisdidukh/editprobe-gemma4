@@ -3,3 +3,7 @@
 {"model": "e2b", "protocol": "edit_file", "task": "httpx_timeout", "repair_info": {"head": 10, "tail": 20}, "repaired": "pass", "tests": {"passed": ["test_default_applies_to_read", "test_errors_and_copy", "test_none_default", "test_single_value"], "failed": [], "f2p_ok": true, "p2p_ok": true}}
 {"model": "e2b", "protocol": "edit_file", "task": "rich_markup_escape", "repair_info": {"head": 0, "tail": 19}, "repaired": "syntax_error: unexpected indent (src.py, line 10)"}
 {"model": "e2b", "protocol": "edit_file", "task": "rich_style_parse_color", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
+{"model": "e2b", "protocol": "edit_file+hint", "task": "httpx_primitive_value", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
+{"model": "e2b", "protocol": "edit_file_v", "task": "httpx_timeout", "repair_info": {"head": 16, "tail": 14}, "repaired": "tests_fail", "tests": {"passed": ["test_errors_and_copy", "test_none_default"], "failed": ["test_default_applies_to_read", "test_single_value"], "f2p_ok": false, "p2p_ok": true}}
+{"model": "e2b", "protocol": "edit_file_v", "task": "req_parse_header_links", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
+{"model": "e2b", "protocol": "edit_file_v", "task": "rich_markup_escape", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}

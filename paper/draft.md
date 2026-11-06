@@ -89,11 +89,74 @@ The competition serves `*-it-qat-w4a16-ct` through vLLM; our GGUF q4_0 files are
 
 ## 4. Results
 
-[TO BE FILLED FROM results/summary.md AND results/rescore.md]
+All numbers: 35 tasks, one attempt each, temperature 0. The raw records (full model output, parsed edit, matcher tier, test output) are in `results/*.jsonl`; the tables below are produced by `harness/analyze.py` and `harness/rescore.py`.
+
+### 4.1 Gemma 4 E2B
+
+**Table 2. E2B by protocol, without and with the gold fix given as a hint.** "applied" = the edit reached the file; "resolved" = all hidden tests pass (bootstrap 95% CI over tasks).
+
+| protocol | tool call ok | applied | compiles | resolved | 95% CI | == gold | mean tokens out | mean s/task |
+|---|---|---|---|---|---|---|---|---|
+| edit_file | 35 | 32 | 27 | **9 (26%)** | 11–40% | 3 | 210 | 23 |
+| edit_file_v | 35 | 33 | 30 | **10 (29%)** | 14–46% | 5 | 192 | 18 |
+| udiff | 35 | 31 | 31 | **10 (29%)** | 14–43% | 6 | 156 | 18 |
+| write_file | 33 | 33 | 33 | **18 (51%)** | 34–69% | 9 | 481 | 48 |
+| edit_file + hint | 35 | 35 | 34 | **34 (97%)** | 91–100% | 34 | 75 | 10 |
+| edit_file_v + hint | 35 | 35 | 35 | **33 (94%)** | 86–100% | 32 | 75 | 7 |
+| udiff + hint | 35 | 29 | 28 | **25 (71%)** | 57–86% | 22 | 116 | 14 |
+| write_file + hint | 35 | 35 | 35 | **34 (97%)** | 91–100% | 31 | 475 | 47 |
+
+**Landing an edit is not E2B's problem.** Given the fix in words, `edit_file` lands it and passes the tests in 34 of 35 tasks, and 34 of those 35 files are byte-identical to the gold file. Every `old_string` matched at the exact tier; the whitespace-flexible and regex tiers were never needed. The one failure is a span mismatch (below). `write_file` with the hint is equally good (34/35, 31 byte-identical). Unified diffs are the weak format for transcription: 6 of 35 diffs did not apply under any of our six passes (wrong context lines, hallucinated `-` lines) and 3 applied but changed nothing.
+
+**Without the hint, the protocol changes the outcome by a factor of two.** Rewriting the whole file resolves 18 tasks; search/replace resolves 9 (10 with the verbatim-copy instruction); unified diff 10. The union over the four protocols is 21 tasks; only 4 tasks are solved by all four. `write_file` costs 2.3× the output tokens and 2× the wall time of `edit_file`, and it did not damage the files: 22 of 33 rewrites changed no line outside the gold region, and the mean number of extraneous changed lines is 0.5 (max 4).
+
+Figure 1 shows where the attempts end.
+
+![Figure 1. Failure ladder per condition.](results/ladder.png)
+
+**Table 3. Failure ladder, E2B without hint.**
+
+| protocol | no tool call | old_string not found | patch failed | no-op edit | syntax error | tests fail | regression | pass |
+|---|---|---|---|---|---|---|---|---|
+| edit_file | 0 | 3 | – | 6 | 5 | 10 | 2 | 9 |
+| edit_file_v | 0 | 2 | – | 8 | 3 | 10 | 2 | 10 |
+| udiff | – | – | 4 | 8 | 0 | 11 | 2 | 10 |
+| write_file | 2 | – | – | 9 | 0 | 6 | 0 | 18 |
+
+Three failure modes stand out.
+
+*No-op edits.* In 6–9 of 35 tasks per protocol the model emits a syntactically perfect edit that changes nothing: `new_string == old_string`, or a whole-file rewrite identical to the input, or a diff whose `+` lines equal its `-` lines. One task (`rich_filesize_decimal`) is a no-op under all four protocols and eight tasks under at least two. These attempts cost a tool call and look like progress to an agent loop that only checks for errors. With the hint, no-ops fall to 0–1 (3 for udiff).
+
+*Span mismatch.* All 5 syntax errors in `edit_file` and all 3 in `edit_file_v` have the same shape: `new_string` repeats lines that sit before or after `old_string` in the file (2 to 20 lines), so the replacement duplicates them. In one case (`httpx_timeout`) the correct fix was inside that overflow, outside the `old_string` span. A harness-side **anchor repair** — when the plain replacement does not compile, extend the replaced region to the first and last lines of `new_string` if each is found exactly once within 80 lines — makes 3 of the 4 repairable edits compile and turns `httpx_timeout` into a pass (Table 5). The repair never touches an edit that compiles, so it cannot lower the score.
+
+*Hallucinated `old_string`.* 3 of 35 (`edit_file`) and 2 (`edit_file_v`) did not match: the model renamed an identifier or dropped a token while "copying" (e.g. `HEADER_VALIDATORS` → `_HEADER_VALIDATORS`, `(1 << 32 - mask) - 1` → `(1 << 33 - mask)`). These are not whitespace problems, so the harness's flexible tiers would not rescue them.
+
+**Localization inside a 50-line file is the real bottleneck.** Among applied `edit_file` edits, only 14 of 32 touched the gold lines at all; 7 of those 14 resolved, against 2 of 18 that edited elsewhere. `write_file` touched the gold lines in 21 of 33 rewrites (17 resolved). The whole-file protocol seems to let the model re-read and re-emit the function it is fixing, where search/replace asks it to commit to a region first; [KD: this is an interpretation — keep, soften, or cut].
+
+**Table 5. Anchor repair, replayed on the logged edits (no model calls).**
+
+| condition | base resolved | syntax errors | repair compiles | repaired → pass | resolved with repair |
+|---|---|---|---|---|---|
+| E2B edit_file | 9 | 5 | 3 of 4 attempted | 1 | **10** |
+| E2B edit_file_v | 10 | 3 | 1 of 1 | 0 | 10 |
+| E2B edit_file + hint | 34 | 1 | 0 of 0 | 0 | 34 |
+| [E4B rows TBD] | | | | | |
+
+### 4.2 Gemma 4 E4B
+
+[E4B RESULTS TBD — runs in progress]
+
+### 4.3 Cost
+
+The whole E2B grid (8 conditions × 35 tasks) took [TBD] hours of wall time on two CPU cores; E4B [TBD]. Prompts are 685–833 tokens on average; `write_file` answers are a median 448 tokens.
 
 ## 5. What this means for an agent built on E2B/E4B
 
-[TO BE WRITTEN]
+1. **For files that fit in one `read_file` window, prefer `write_file` over `edit_file` on E2B.** It doubled the resolve rate here at ~2× the tokens. The competition's `write_file` tool exists; the sample agent instructions push `edit_file`. [KD: you may want to state this more carefully — it is one benchmark, 35 tasks]
+2. **Check for no-op edits in the harness or the instruction.** A tool result that says "file unchanged" (string compare before/after) is free and would have flagged 17–26% of E2B's edits.
+3. **Add anchor repair to the edit tool.** It is 40 lines, replayable, and only acts when the plain edit does not compile.
+4. **Do not ask E2B for unified diffs.** Even when told the exact fix, 10 of 35 diffs failed to land or changed nothing.
+5. **Localization, not transcription, is where to spend tokens.** With the fix known, E2B lands it 97% of the time in 75 tokens. Agent designs that first make the model name the lines to change (and verify they exist) and only then edit would address the failure we actually observe.
 
 ## 6. Limitations
 
