@@ -2,3 +2,270 @@
 [9/35] httpx_same_origin                noop_edit              tier=whole_file tok=416 140.2s  resolved so far 0
 [10/35] httpx_text_chunker               pass                   tier=whole_file tok=467 150.3s  resolved so far 1
 [11/35] httpx_timeout                    pass                   tier=whole_file tok=829 269.1s  resolved so far 2
+[12/35] httpx_url_pattern                noop_edit              tier=whole_file tok=734 243.3s  resolved so far 2
+[13/35] req_case_insensitive_dict        pass                   tier=whole_file tok=528 173.9s  resolved so far 3
+[14/35] req_check_header_validity        pass                   tier=whole_file tok=526 175.7s  resolved so far 4
+[15/35] req_dotted_netmask               pass                   tier=whole_file tok=414 140.8s  resolved so far 5
+[16/35] req_get_auth_from_url            pass                   tier=whole_file tok=282  95.1s  resolved so far 6
+[17/35] req_get_encoding_from_headers    tests_fail             tier=whole_file tok=434 144.2s  resolved so far 6
+[18/35] req_guess_json_utf               pass                   tier=whole_file tok=500 163.7s  resolved so far 7
+[19/35] req_iter_slices                  pass                   tier=whole_file tok=324 107.1s  resolved so far 8
+[20/35] req_parse_dict_header            pass                   tier=whole_file tok=452 150.3s  resolved so far 9
+[21/35] req_parse_header_links           pass                   tier=whole_file tok=291  99.5s  resolved so far 10
+[22/35] req_prepend_scheme               tests_fail             tier=whole_file tok=498 164.4s  resolved so far 10
+[23/35] req_super_len                    pass                   tier=whole_file tok=473 156.2s  resolved so far 11
+[24/35] req_unquote_unreserved           pass                   tier=whole_file tok=529 174.5s  resolved so far 12
+[25/35] rich_ansi_strip                  pass                   tier=whole_file tok=205  70.9s  resolved so far 13
+[26/35] rich_chop_cells                  pass                   tier=whole_file tok=738 242.3s  resolved so far 14
+[27/35] rich_color_triplet               pass                   tier=whole_file tok=595 194.6s  resolved so far 15
+[28/35] rich_divide_line                 pass                   tier=whole_file tok=884 292.2s  resolved so far 16
+[29/35] rich_filesize_decimal            tests_fail             tier=whole_file tok=577 192.6s  resolved so far 16
+[30/35] rich_lookup_pick_bool            tests_fail_regression  tier=whole_file tok=187  64.5s  resolved so far 16
+[31/35] rich_loop_last                   pass                   tier=whole_file tok=358 121.2s  resolved so far 17
+[32/35] rich_markup_escape               noop_edit              tier=whole_file tok=393 129.6s  resolved so far 17
+[33/35] rich_ratio_distribute            tests_fail             tier=whole_file tok=1222 378.2s  resolved so far 17
+[34/35] rich_ratio_resolve               tests_fail             tier=whole_file tok=1403 437.2s  resolved so far 17
+[35/35] rich_style_parse_color           tests_fail             tier=whole_file tok=678 224.1s  resolved so far 17
+=== e4b edit_file --hint attempt 1 2026-11-06T23:36:45Z
+[1/35] httpx_byte_chunker               pass                   tier=exact tok=93  57.7s  resolved so far 1
+[2/35] httpx_cookie_domain              pass                   tier=exact tok=56  38.9s  resolved so far 2
+[3/35] httpx_line_decoder               pass                   tier=exact tok=150  71.0s  resolved so far 3
+[4/35] httpx_multipart_boundary         pass                   tier=exact tok=63  35.1s  resolved so far 4
+[5/35] httpx_normalize_port             pass                   tier=exact tok=85  47.2s  resolved so far 5
+[6/35] httpx_obfuscate_headers          pass                   tier=exact tok=54  30.7s  resolved so far 6
+[7/35] httpx_peek_filelike_length       pass                   tier=exact tok=64  35.7s  resolved so far 7
+[8/35] httpx_primitive_value            pass                   tier=exact tok=91  36.8s  resolved so far 8
+[9/35] httpx_same_origin                pass                   tier=exact tok=76  50.6s  resolved so far 9
+[10/35] httpx_text_chunker               pass                   tier=exact tok=43  41.5s  resolved so far 10
+[11/35] httpx_timeout                    pass                   tier=exact tok=63 154.4s  resolved so far 11
+[12/35] httpx_url_pattern                pass                   tier=exact tok=62  80.5s  resolved so far 12
+[13/35] req_case_insensitive_dict        pass                   tier=exact tok=71 112.0s  resolved so far 13
+[14/35] req_check_header_validity        pass                   tier=exact tok=93 138.8s  resolved so far 14
+[15/35] req_dotted_netmask               pass                   tier=exact tok=71 104.9s  resolved so far 15
+[16/35] req_get_auth_from_url            pass                   tier=exact tok=64  94.6s  resolved so far 16
+[17/35] req_get_encoding_from_headers    syntax_error           tier=ws_flex tok=54  88.6s  resolved so far 16
+[18/35] req_guess_json_utf               pass                   tier=exact tok=79 129.0s  resolved so far 17
+[19/35] req_iter_slices                  pass                   tier=exact tok=51  92.9s  resolved so far 18
+[20/35] req_parse_dict_header            pass                   tier=exact tok=57 107.9s  resolved so far 19
+[21/35] req_parse_header_links           pass                   tier=exact tok=52 104.9s  resolved so far 20
+[22/35] req_prepend_scheme               tests_fail             tier=exact tok=101 176.0s  resolved so far 20
+[23/35] req_super_len                    pass                   tier=exact tok=55 114.9s  resolved so far 21
+[24/35] req_unquote_unreserved           pass                   tier=exact tok=57 119.7s  resolved so far 22
+[25/35] rich_ansi_strip                  pass                   tier=exact tok=72 116.9s  resolved so far 23
+[26/35] rich_chop_cells                  pass                   tier=exact tok=64 125.2s  resolved so far 24
+[27/35] rich_color_triplet               pass                   tier=exact tok=71 127.1s  resolved so far 25
+[28/35] rich_divide_line                 pass                   tier=exact tok=63 151.1s  resolved so far 26
+[29/35] rich_filesize_decimal            pass                   tier=exact tok=43 110.1s  resolved so far 27
+[30/35] rich_lookup_pick_bool            pass                   tier=exact tok=42  87.6s  resolved so far 28
+[31/35] rich_loop_last                   pass                   tier=exact tok=59 132.8s  resolved so far 29
+[32/35] rich_markup_escape               pass                   tier=exact tok=88 190.1s  resolved so far 30
+[33/35] rich_ratio_distribute            pass                   tier=exact tok=65 155.1s  resolved so far 31
+server (re)started 2026-11-07T00:34:26Z
+=== e4b write_file  attempt 1 2026-11-07T00:34:26Z
+=== e4b edit_file --hint attempt 1 2026-11-07T00:34:26Z
+[34/35] rich_ratio_resolve               pass                   tier=exact tok=51  54.4s  resolved so far 1
+[35/35] rich_style_parse_color           pass                   tier=exact tok=61  49.5s  resolved so far 2
+=== e4b udiff  attempt 1 2026-11-07T00:36:10Z
+[1/35] httpx_byte_chunker               tests_fail             tier=recount_fuzzy tok=282 113.3s  resolved so far 0
+[2/35] httpx_cookie_domain              pass                   tier=recount_fuzzy tok=167  75.2s  resolved so far 1
+[3/35] httpx_line_decoder               tests_fail             tier=fuzzy tok=124  64.5s  resolved so far 1
+[4/35] httpx_multipart_boundary         pass                   tier=fuzzy tok=106  49.2s  resolved so far 2
+[5/35] httpx_normalize_port             pass                   tier=fuzzy tok=93  49.3s  resolved so far 3
+[6/35] httpx_obfuscate_headers          pass                   tier=fuzzy tok=89  42.8s  resolved so far 4
+[7/35] httpx_peek_filelike_length       noop_edit              tier=strict tok=138  60.8s  resolved so far 4
+[8/35] httpx_primitive_value            pass                   tier=recount_fuzzy tok=84  36.8s  resolved so far 5
+[9/35] httpx_same_origin                tests_fail             tier=fuzzy tok=123  58.9s  resolved so far 5
+[10/35] httpx_text_chunker               tests_fail             tier=recount_fuzzy tok=269 108.4s  resolved so far 5
+[11/35] httpx_timeout                    patch_failed           tier=failed tok=252 114.7s  resolved so far 5
+[12/35] httpx_url_pattern                tests_fail             tier=fuzzy tok=122  67.9s  resolved so far 5
+[13/35] req_case_insensitive_dict        pass                   tier=strict tok=112  57.8s  resolved so far 6
+[14/35] req_check_header_validity        patch_failed           tier=failed tok=254 103.1s  resolved so far 6
+[15/35] req_dotted_netmask               pass                   tier=fuzzy tok=104  52.8s  resolved so far 7
+[16/35] req_get_auth_from_url            pass                   tier=strict tok=101  45.9s  resolved so far 8
+[17/35] req_get_encoding_from_headers    tests_fail             tier=strict tok=191  81.0s  resolved so far 8
+[18/35] req_guess_json_utf               pass                   tier=fuzzy tok=192  82.5s  resolved so far 9
+[19/35] req_iter_slices                  pass                   tier=fuzzy tok=102  46.8s  resolved so far 10
+server (re)started 2026-11-07T01:01:46Z
+=== e4b write_file  attempt 1 2026-11-07T01:01:46Z
+=== e4b edit_file --hint attempt 1 2026-11-07T01:01:46Z
+=== e4b udiff  attempt 1 2026-11-07T01:01:46Z
+[20/35] req_parse_dict_header            pass                   tier=strict tok=117  58.1s  resolved so far 1
+[21/35] req_parse_header_links           pass                   tier=fuzzy tok=101  48.0s  resolved so far 2
+[22/35] req_prepend_scheme               tests_fail             tier=strict tok=109  55.1s  resolved so far 2
+[23/35] req_super_len                    tests_fail             tier=strict tok=127  61.5s  resolved so far 2
+[24/35] req_unquote_unreserved           pass                   tier=strict tok=138  65.3s  resolved so far 3
+[25/35] rich_ansi_strip                  pass                   tier=strict tok=140  57.8s  resolved so far 4
+[26/35] rich_chop_cells                  pass                   tier=strict tok=92  56.8s  resolved so far 5
+[27/35] rich_color_triplet               pass                   tier=strict tok=128  64.6s  resolved so far 6
+[28/35] rich_divide_line                 patch_failed           tier=failed tok=223 104.0s  resolved so far 6
+[29/35] rich_filesize_decimal            tests_fail             tier=recount_fuzzy tok=177  79.6s  resolved so far 6
+[30/35] rich_lookup_pick_bool            tests_fail_regression  tier=fuzzy tok=77  33.8s  resolved so far 6
+[31/35] rich_loop_last                   pass                   tier=fuzzy tok=74  39.1s  resolved so far 7
+[32/35] rich_markup_escape               tests_fail             tier=strict tok=100  47.6s  resolved so far 7
+[33/35] rich_ratio_distribute            tests_fail             tier=recount_fuzzy tok=455 174.9s  resolved so far 7
+[34/35] rich_ratio_resolve               tests_fail             tier=strict tok=138  71.3s  resolved so far 7
+[35/35] rich_style_parse_color           tests_fail             tier=strict tok=107  60.3s  resolved so far 7
+=== e4b write_file --hint attempt 1 2026-11-07T01:19:44Z
+[1/35] httpx_byte_chunker               pass                   tier=whole_file tok=350 138.1s  resolved so far 1
+[2/35] httpx_cookie_domain              pass                   tier=whole_file tok=443 169.3s  resolved so far 2
+[3/35] httpx_line_decoder               pass                   tier=whole_file tok=550 209.7s  resolved so far 3
+[4/35] httpx_multipart_boundary         pass                   tier=whole_file tok=293 113.0s  resolved so far 4
+[5/35] httpx_normalize_port             pass                   tier=whole_file tok=410 162.8s  resolved so far 5
+[6/35] httpx_obfuscate_headers          pass                   tier=whole_file tok=296 112.7s  resolved so far 6
+[7/35] httpx_peek_filelike_length       pass                   tier=whole_file tok=328 126.1s  resolved so far 7
+[8/35] httpx_primitive_value            pass                   tier=whole_file tok=208  79.2s  resolved so far 8
+[9/35] httpx_same_origin                pass                   tier=whole_file tok=429 161.9s  resolved so far 9
+[10/35] httpx_text_chunker               pass                   tier=whole_file tok=458 180.2s  resolved so far 10
+[11/35] httpx_timeout                    pass                   tier=whole_file tok=829 311.0s  resolved so far 11
+[12/35] httpx_url_pattern                pass                   tier=whole_file tok=731 269.7s  resolved so far 12
+[13/35] req_case_insensitive_dict        pass                   tier=whole_file tok=515 192.8s  resolved so far 13
+[14/35] req_check_header_validity        pass                   tier=whole_file tok=530 194.5s  resolved so far 14
+[15/35] req_dotted_netmask               pass                   tier=whole_file tok=420 155.5s  resolved so far 15
+[16/35] req_get_auth_from_url            pass                   tier=whole_file tok=282 104.5s  resolved so far 16
+[17/35] req_get_encoding_from_headers    pass                   tier=whole_file tok=437 162.7s  resolved so far 17
+[18/35] req_guess_json_utf               pass                   tier=whole_file tok=500 188.0s  resolved so far 18
+[19/35] req_iter_slices                  pass                   tier=whole_file tok=324 120.1s  resolved so far 19
+[20/35] req_parse_dict_header            pass                   tier=whole_file tok=446 166.2s  resolved so far 20
+[21/35] req_parse_header_links           pass                   tier=whole_file tok=291 112.1s  resolved so far 21
+[22/35] req_prepend_scheme               pass                   tier=whole_file tok=483 172.9s  resolved so far 22
+[23/35] req_super_len                    pass                   tier=whole_file tok=476 180.0s  resolved so far 23
+[24/35] req_unquote_unreserved           pass                   tier=whole_file tok=537 197.5s  resolved so far 24
+[25/35] rich_ansi_strip                  pass                   tier=whole_file tok=207 154.8s  resolved so far 25
+[26/35] rich_chop_cells                  pass                   tier=whole_file tok=740 845.9s  resolved so far 26
+[27/35] rich_color_triplet               pass                   tier=whole_file tok=603 733.8s  resolved so far 27
+server (re)started 2026-11-07T02:59:32Z
+=== e4b write_file  attempt 1 2026-11-07T02:59:32Z
+=== e4b edit_file --hint attempt 1 2026-11-07T02:59:32Z
+=== e4b udiff  attempt 1 2026-11-07T02:59:33Z
+=== e4b write_file --hint attempt 1 2026-11-07T02:59:33Z
+[28/35] rich_divide_line                 pass                   tier=whole_file tok=892 325.8s  resolved so far 1
+[29/35] rich_filesize_decimal            pass                   tier=whole_file tok=580 210.1s  resolved so far 2
+[30/35] rich_lookup_pick_bool            pass                   tier=whole_file tok=187  69.9s  resolved so far 3
+[31/35] rich_loop_last                   pass                   tier=whole_file tok=358 131.9s  resolved so far 4
+[32/35] rich_markup_escape               noop_edit              tier=whole_file tok=400 145.9s  resolved so far 4
+[33/35] rich_ratio_distribute            pass                   tier=whole_file tok=653 238.2s  resolved so far 5
+[34/35] rich_ratio_resolve               pass                   tier=whole_file tok=736 272.6s  resolved so far 6
+[35/35] rich_style_parse_color           pass                   tier=whole_file tok=677 249.9s  resolved so far 7
+=== e4b edit_file_v  attempt 1 2026-11-07T03:26:57Z
+[1/35] httpx_byte_chunker               tests_fail             tier=exact tok=218  94.7s  resolved so far 0
+[2/35] httpx_cookie_domain              tests_fail             tier=exact tok=93  49.5s  resolved so far 0
+[3/35] httpx_line_decoder               tests_fail             tier=exact tok=123  61.3s  resolved so far 0
+[4/35] httpx_multipart_boundary         pass                   tier=exact tok=63  34.2s  resolved so far 1
+[5/35] httpx_normalize_port             tests_fail             tier=exact tok=126  58.1s  resolved so far 1
+[6/35] httpx_obfuscate_headers          pass                   tier=exact tok=54  30.2s  resolved so far 2
+[7/35] httpx_peek_filelike_length       tests_fail             tier=exact tok=85  41.5s  resolved so far 2
+[8/35] httpx_primitive_value            tests_fail             tier=exact tok=75  32.9s  resolved so far 2
+[9/35] httpx_same_origin                syntax_error           tier=ws_flex tok=208  83.8s  resolved so far 2
+[10/35] httpx_text_chunker               tests_fail             tier=exact tok=101  51.2s  resolved so far 2
+[11/35] httpx_timeout                    pass                   tier=exact tok=165  84.1s  resolved so far 3
+[12/35] httpx_url_pattern                tests_fail             tier=exact tok=68  49.5s  resolved so far 3
+[13/35] req_case_insensitive_dict        pass                   tier=exact tok=71  45.0s  resolved so far 4
+[14/35] req_check_header_validity        tests_fail             tier=exact tok=73  44.4s  resolved so far 4
+[15/35] req_dotted_netmask               pass                   tier=exact tok=106  54.6s  resolved so far 5
+[16/35] req_get_auth_from_url            pass                   tier=exact tok=64  34.9s  resolved so far 6
+[17/35] req_get_encoding_from_headers    tests_fail             tier=exact tok=100  53.0s  resolved so far 6
+[18/35] req_guess_json_utf               tests_fail             tier=exact tok=171  79.5s  resolved so far 6
+[19/35] req_iter_slices                  pass                   tier=exact tok=51  33.1s  resolved so far 7
+[20/35] req_parse_dict_header            pass                   tier=exact tok=131  63.3s  resolved so far 8
+[21/35] req_parse_header_links           pass                   tier=exact tok=52  34.2s  resolved so far 9
+[22/35] req_prepend_scheme               pass                   tier=exact tok=78  46.7s  resolved so far 10
+[23/35] req_super_len                    syntax_error           tier=exact tok=167  78.8s  resolved so far 10
+[24/35] req_unquote_unreserved           pass                   tier=exact tok=123  63.8s  resolved so far 11
+[25/35] rich_ansi_strip                  pass                   tier=exact tok=70  34.3s  resolved so far 12
+[26/35] rich_chop_cells                  pass                   tier=exact tok=64  49.2s  resolved so far 13
+[27/35] rich_color_triplet               pass                   tier=exact tok=71  47.3s  resolved so far 14
+[28/35] rich_divide_line                 tests_fail             tier=exact tok=397 158.6s  resolved so far 14
+[29/35] rich_filesize_decimal            tests_fail             tier=exact tok=134  68.0s  resolved so far 14
+[30/35] rich_lookup_pick_bool            tests_fail_regression  tier=exact tok=75  48.1s  resolved so far 14
+[31/35] rich_loop_last                   pass                   tier=exact tok=93  48.0s  resolved so far 15
+[32/35] rich_markup_escape               old_not_found          tier=not_found tok=69 229.1s  resolved so far 15
+[33/35] rich_ratio_distribute            tests_fail             tier=exact tok=328 360.2s  resolved so far 15
+[34/35] rich_ratio_resolve               tests_fail             tier=exact tok=102 150.8s  resolved so far 15
+[35/35] rich_style_parse_color           tests_fail             tier=exact tok=122 209.7s  resolved so far 15
+=== e4b udiff --hint attempt 1 2026-11-07T04:12:03Z
+[1/35] httpx_byte_chunker               pass                   tier=recount_fuzzy tok=92 209.9s  resolved so far 1
+[2/35] httpx_cookie_domain              pass                   tier=fuzzy tok=114 253.6s  resolved so far 2
+[3/35] httpx_line_decoder               pass                   tier=fuzzy tok=91 160.8s  resolved so far 3
+[4/35] httpx_multipart_boundary         pass                   tier=fuzzy tok=106 195.7s  resolved so far 4
+[5/35] httpx_normalize_port             pass                   tier=fuzzy tok=93 139.5s  resolved so far 5
+[6/35] httpx_obfuscate_headers          pass                   tier=fuzzy tok=100 144.0s  resolved so far 6
+[7/35] httpx_peek_filelike_length       pass                   tier=strict tok=97 151.5s  resolved so far 7
+[8/35] httpx_primitive_value            pass                   tier=recount_fuzzy tok=110 169.6s  resolved so far 8
+[9/35] httpx_same_origin                patch_failed           tier=failed tok=123 193.7s  resolved so far 8
+[10/35] httpx_text_chunker               pass                   tier=strict tok=100 170.5s  resolved so far 9
+[11/35] httpx_timeout                    pass                   tier=fuzzy tok=119 194.7s  resolved so far 10
+[12/35] httpx_url_pattern                patch_failed           tier=failed tok=219 378.4s  resolved so far 10
+[13/35] req_case_insensitive_dict        pass                   tier=strict tok=112 156.1s  resolved so far 11
+[14/35] req_check_header_validity        pass                   tier=fuzzy tok=92 162.7s  resolved so far 12
+[15/35] req_dotted_netmask               pass                   tier=fuzzy tok=105 136.7s  resolved so far 13
+server (re)started 2026-11-07T04:59:49Z
+=== e4b write_file  attempt 1 2026-11-07T04:59:49Z
+=== e4b edit_file --hint attempt 1 2026-11-07T04:59:49Z
+=== e4b udiff  attempt 1 2026-11-07T04:59:49Z
+=== e4b write_file --hint attempt 1 2026-11-07T04:59:49Z
+=== e4b edit_file_v  attempt 1 2026-11-07T04:59:49Z
+=== e4b udiff --hint attempt 1 2026-11-07T04:59:49Z
+[16/35] req_get_auth_from_url            pass                   tier=strict tok=101  46.3s  resolved so far 1
+[17/35] req_get_encoding_from_headers    pass                   tier=strict tok=129  60.4s  resolved so far 2
+[18/35] req_guess_json_utf               pass                   tier=fuzzy tok=156  70.6s  resolved so far 3
+[19/35] req_iter_slices                  pass                   tier=fuzzy tok=100  45.5s  resolved so far 4
+[20/35] req_parse_dict_header            pass                   tier=strict tok=117  56.3s  resolved so far 5
+[21/35] req_parse_header_links           pass                   tier=fuzzy tok=101  49.0s  resolved so far 6
+[22/35] req_prepend_scheme               pass                   tier=recount_fuzzy tok=163  67.9s  resolved so far 7
+server (re)started 2026-11-07T05:09:57Z
+=== e4b write_file  attempt 1 2026-11-07T05:09:57Z
+=== e4b edit_file --hint attempt 1 2026-11-07T05:09:57Z
+=== e4b udiff  attempt 1 2026-11-07T05:09:57Z
+=== e4b write_file --hint attempt 1 2026-11-07T05:09:57Z
+=== e4b edit_file_v  attempt 1 2026-11-07T05:09:57Z
+=== e4b udiff --hint attempt 1 2026-11-07T05:09:57Z
+[23/35] req_super_len                    patch_failed           tier=failed tok=81  48.4s  resolved so far 0
+[24/35] req_unquote_unreserved           pass                   tier=strict tok=120  62.6s  resolved so far 1
+[25/35] rich_ansi_strip                  pass                   tier=strict tok=140  55.1s  resolved so far 2
+[26/35] rich_chop_cells                  pass                   tier=recount_fuzzy tok=96  59.2s  resolved so far 3
+[27/35] rich_color_triplet               pass                   tier=strict tok=128  63.0s  resolved so far 4
+[28/35] rich_divide_line                 pass                   tier=fuzzy tok=125  71.9s  resolved so far 5
+[29/35] rich_filesize_decimal            pass                   tier=fuzzy tok=99  55.7s  resolved so far 6
+[30/35] rich_lookup_pick_bool            pass                   tier=fuzzy tok=77  35.7s  resolved so far 7
+[31/35] rich_loop_last                   tests_fail             tier=fuzzy tok=84  43.6s  resolved so far 7
+[32/35] rich_markup_escape               tests_fail             tier=fuzzy tok=166  68.3s  resolved so far 7
+[33/35] rich_ratio_distribute            pass                   tier=fuzzy tok=117  62.8s  resolved so far 8
+[34/35] rich_ratio_resolve               pass                   tier=recount_fuzzy tok=139  70.4s  resolved so far 9
+[35/35] rich_style_parse_color           pass                   tier=recount_fuzzy tok=125  65.1s  resolved so far 10
+=== e4b edit_file_v --hint attempt 1 2026-11-07T05:22:39Z
+[1/35] httpx_byte_chunker               pass                   tier=exact tok=93  51.5s  resolved so far 1
+[2/35] httpx_cookie_domain              pass                   tier=exact tok=56  38.5s  resolved so far 2
+[3/35] httpx_line_decoder               pass                   tier=exact tok=150  69.4s  resolved so far 3
+[4/35] httpx_multipart_boundary         pass                   tier=exact tok=63  35.8s  resolved so far 4
+[5/35] httpx_normalize_port             pass                   tier=exact tok=49  37.2s  resolved so far 5
+[6/35] httpx_obfuscate_headers          pass                   tier=exact tok=54  32.4s  resolved so far 6
+[7/35] httpx_peek_filelike_length       pass                   tier=exact tok=64  35.7s  resolved so far 7
+[8/35] httpx_primitive_value            pass                   tier=exact tok=91  39.2s  resolved so far 8
+[9/35] httpx_same_origin                pass                   tier=exact tok=76  43.8s  resolved so far 9
+[10/35] httpx_text_chunker               pass                   tier=exact tok=43  42.0s  resolved so far 10
+[11/35] httpx_timeout                    pass                   tier=exact tok=63  54.4s  resolved so far 11
+[12/35] httpx_url_pattern                pass                   tier=exact tok=62  50.4s  resolved so far 12
+[13/35] req_case_insensitive_dict        pass                   tier=exact tok=71  46.9s  resolved so far 13
+[14/35] req_check_header_validity        pass                   tier=exact tok=93  52.7s  resolved so far 14
+[15/35] req_dotted_netmask               pass                   tier=exact tok=71  43.5s  resolved so far 15
+[16/35] req_get_auth_from_url            pass                   tier=exact tok=64  34.3s  resolved so far 16
+[17/35] req_get_encoding_from_headers    syntax_error           tier=ws_flex tok=54  37.8s  resolved so far 16
+[18/35] req_guess_json_utf               pass                   tier=exact tok=79  46.9s  resolved so far 17
+[19/35] req_iter_slices                  pass                   tier=exact tok=51  31.6s  resolved so far 18
+[20/35] req_parse_dict_header            pass                   tier=exact tok=57  38.3s  resolved so far 19
+[21/35] req_parse_header_links           pass                   tier=exact tok=52  33.1s  resolved so far 20
+[22/35] req_prepend_scheme               tests_fail             tier=exact tok=101  51.4s  resolved so far 20
+[23/35] req_super_len                    pass                   tier=exact tok=55  39.3s  resolved so far 21
+[24/35] req_unquote_unreserved           pass                   tier=exact tok=123  62.4s  resolved so far 22
+[25/35] rich_ansi_strip                  pass                   tier=exact tok=72  35.8s  resolved so far 23
+[26/35] rich_chop_cells                  pass                   tier=exact tok=64  53.9s  resolved so far 24
+[27/35] rich_color_triplet               pass                   tier=exact tok=71  48.6s  resolved so far 25
+[28/35] rich_divide_line                 pass                   tier=exact tok=63 132.2s  resolved so far 26
+[29/35] rich_filesize_decimal            pass                   tier=exact tok=43  63.9s  resolved so far 27
+[30/35] rich_lookup_pick_bool            pass                   tier=exact tok=80 104.9s  resolved so far 28
+[31/35] rich_loop_last                   pass                   tier=exact tok=59 107.3s  resolved so far 29
+[32/35] rich_markup_escape               pass                   tier=exact tok=88 198.2s  resolved so far 30
+[33/35] rich_ratio_distribute            pass                   tier=exact tok=65 162.7s  resolved so far 31
+[34/35] rich_ratio_resolve               pass                   tier=exact tok=51 104.7s  resolved so far 32
+[35/35] rich_style_parse_color           pass                   tier=exact tok=61 110.3s  resolved so far 33
+PIPELINE2_DONE 2026-11-07T05:58:50Z

@@ -60,3 +60,38 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.13/urllib/request.py", line 1334, in do_open
     raise URLError(err)
 urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+[1/35] httpx_byte_chunker               pass                   tier=exact tok=93  51.5s  resolved so far 1
+[2/35] httpx_cookie_domain              pass                   tier=exact tok=56  38.5s  resolved so far 2
+[3/35] httpx_line_decoder               pass                   tier=exact tok=150  69.4s  resolved so far 3
+[4/35] httpx_multipart_boundary         pass                   tier=exact tok=63  35.8s  resolved so far 4
+[5/35] httpx_normalize_port             pass                   tier=exact tok=49  37.2s  resolved so far 5
+[6/35] httpx_obfuscate_headers          pass                   tier=exact tok=54  32.4s  resolved so far 6
+[7/35] httpx_peek_filelike_length       pass                   tier=exact tok=64  35.7s  resolved so far 7
+[8/35] httpx_primitive_value            pass                   tier=exact tok=91  39.2s  resolved so far 8
+[9/35] httpx_same_origin                pass                   tier=exact tok=76  43.8s  resolved so far 9
+[10/35] httpx_text_chunker               pass                   tier=exact tok=43  42.0s  resolved so far 10
+[11/35] httpx_timeout                    pass                   tier=exact tok=63  54.4s  resolved so far 11
+[12/35] httpx_url_pattern                pass                   tier=exact tok=62  50.4s  resolved so far 12
+[13/35] req_case_insensitive_dict        pass                   tier=exact tok=71  46.9s  resolved so far 13
+[14/35] req_check_header_validity        pass                   tier=exact tok=93  52.7s  resolved so far 14
+[15/35] req_dotted_netmask               pass                   tier=exact tok=71  43.5s  resolved so far 15
+[16/35] req_get_auth_from_url            pass                   tier=exact tok=64  34.3s  resolved so far 16
+[17/35] req_get_encoding_from_headers    syntax_error           tier=ws_flex tok=54  37.8s  resolved so far 16
+[18/35] req_guess_json_utf               pass                   tier=exact tok=79  46.9s  resolved so far 17
+[19/35] req_iter_slices                  pass                   tier=exact tok=51  31.6s  resolved so far 18
+[20/35] req_parse_dict_header            pass                   tier=exact tok=57  38.3s  resolved so far 19
+[21/35] req_parse_header_links           pass                   tier=exact tok=52  33.1s  resolved so far 20
+[22/35] req_prepend_scheme               tests_fail             tier=exact tok=101  51.4s  resolved so far 20
+[23/35] req_super_len                    pass                   tier=exact tok=55  39.3s  resolved so far 21
+[24/35] req_unquote_unreserved           pass                   tier=exact tok=123  62.4s  resolved so far 22
+[25/35] rich_ansi_strip                  pass                   tier=exact tok=72  35.8s  resolved so far 23
+[26/35] rich_chop_cells                  pass                   tier=exact tok=64  53.9s  resolved so far 24
+[27/35] rich_color_triplet               pass                   tier=exact tok=71  48.6s  resolved so far 25
+[28/35] rich_divide_line                 pass                   tier=exact tok=63 132.2s  resolved so far 26
+[29/35] rich_filesize_decimal            pass                   tier=exact tok=43  63.9s  resolved so far 27
+[30/35] rich_lookup_pick_bool            pass                   tier=exact tok=80 104.9s  resolved so far 28
+[31/35] rich_loop_last                   pass                   tier=exact tok=59 107.3s  resolved so far 29
+[32/35] rich_markup_escape               pass                   tier=exact tok=88 198.2s  resolved so far 30
+[33/35] rich_ratio_distribute            pass                   tier=exact tok=65 162.7s  resolved so far 31
+[34/35] rich_ratio_resolve               pass                   tier=exact tok=51 104.7s  resolved so far 32
+[35/35] rich_style_parse_color           pass                   tier=exact tok=61 110.3s  resolved so far 33

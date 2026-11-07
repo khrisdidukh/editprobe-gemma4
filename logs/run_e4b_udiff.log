@@ -60,3 +60,38 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.13/urllib/request.py", line 1334, in do_open
     raise URLError(err)
 urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+[1/35] httpx_byte_chunker               tests_fail             tier=recount_fuzzy tok=282 113.3s  resolved so far 0
+[2/35] httpx_cookie_domain              pass                   tier=recount_fuzzy tok=167  75.2s  resolved so far 1
+[3/35] httpx_line_decoder               tests_fail             tier=fuzzy tok=124  64.5s  resolved so far 1
+[4/35] httpx_multipart_boundary         pass                   tier=fuzzy tok=106  49.2s  resolved so far 2
+[5/35] httpx_normalize_port             pass                   tier=fuzzy tok=93  49.3s  resolved so far 3
+[6/35] httpx_obfuscate_headers          pass                   tier=fuzzy tok=89  42.8s  resolved so far 4
+[7/35] httpx_peek_filelike_length       noop_edit              tier=strict tok=138  60.8s  resolved so far 4
+[8/35] httpx_primitive_value            pass                   tier=recount_fuzzy tok=84  36.8s  resolved so far 5
+[9/35] httpx_same_origin                tests_fail             tier=fuzzy tok=123  58.9s  resolved so far 5
+[10/35] httpx_text_chunker               tests_fail             tier=recount_fuzzy tok=269 108.4s  resolved so far 5
+[11/35] httpx_timeout                    patch_failed           tier=failed tok=252 114.7s  resolved so far 5
+[12/35] httpx_url_pattern                tests_fail             tier=fuzzy tok=122  67.9s  resolved so far 5
+[13/35] req_case_insensitive_dict        pass                   tier=strict tok=112  57.8s  resolved so far 6
+[14/35] req_check_header_validity        patch_failed           tier=failed tok=254 103.1s  resolved so far 6
+[15/35] req_dotted_netmask               pass                   tier=fuzzy tok=104  52.8s  resolved so far 7
+[16/35] req_get_auth_from_url            pass                   tier=strict tok=101  45.9s  resolved so far 8
+[17/35] req_get_encoding_from_headers    tests_fail             tier=strict tok=191  81.0s  resolved so far 8
+[18/35] req_guess_json_utf               pass                   tier=fuzzy tok=192  82.5s  resolved so far 9
+[19/35] req_iter_slices                  pass                   tier=fuzzy tok=102  46.8s  resolved so far 10
+[20/35] req_parse_dict_header            pass                   tier=strict tok=117  58.1s  resolved so far 1
+[21/35] req_parse_header_links           pass                   tier=fuzzy tok=101  48.0s  resolved so far 2
+[22/35] req_prepend_scheme               tests_fail             tier=strict tok=109  55.1s  resolved so far 2
+[23/35] req_super_len                    tests_fail             tier=strict tok=127  61.5s  resolved so far 2
+[24/35] req_unquote_unreserved           pass                   tier=strict tok=138  65.3s  resolved so far 3
+[25/35] rich_ansi_strip                  pass                   tier=strict tok=140  57.8s  resolved so far 4
+[26/35] rich_chop_cells                  pass                   tier=strict tok=92  56.8s  resolved so far 5
+[27/35] rich_color_triplet               pass                   tier=strict tok=128  64.6s  resolved so far 6
+[28/35] rich_divide_line                 patch_failed           tier=failed tok=223 104.0s  resolved so far 6
+[29/35] rich_filesize_decimal            tests_fail             tier=recount_fuzzy tok=177  79.6s  resolved so far 6
+[30/35] rich_lookup_pick_bool            tests_fail_regression  tier=fuzzy tok=77  33.8s  resolved so far 6
+[31/35] rich_loop_last                   pass                   tier=fuzzy tok=74  39.1s  resolved so far 7
+[32/35] rich_markup_escape               tests_fail             tier=strict tok=100  47.6s  resolved so far 7
+[33/35] rich_ratio_distribute            tests_fail             tier=recount_fuzzy tok=455 174.9s  resolved so far 7
+[34/35] rich_ratio_resolve               tests_fail             tier=strict tok=138  71.3s  resolved so far 7
+[35/35] rich_style_parse_color           tests_fail             tier=strict tok=107  60.3s  resolved so far 7

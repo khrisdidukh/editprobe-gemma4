@@ -8,3 +8,7 @@
 {"model": "e2b", "protocol": "edit_file_v", "task": "req_parse_header_links", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
 {"model": "e2b", "protocol": "edit_file_v", "task": "rich_markup_escape", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
 {"model": "e4b", "protocol": "edit_file", "task": "req_super_len", "repair_info": {"head": 7, "tail": 2}, "repaired": "tests_fail", "tests": {"passed": ["test_bytesio_full", "test_restores_position", "test_str_and_bytes"], "failed": ["test_partially_read"], "f2p_ok": false, "p2p_ok": true}}
+{"model": "e4b", "protocol": "edit_file+hint", "task": "req_get_encoding_from_headers", "repair_info": {"reason": "new too short"}, "repaired": null}
+{"model": "e4b", "protocol": "edit_file_v", "task": "httpx_same_origin", "repair_info": {"reason": "no anchor expansion"}, "repaired": null}
+{"model": "e4b", "protocol": "edit_file_v", "task": "req_super_len", "repair_info": {"head": 7, "tail": 2}, "repaired": "tests_fail", "tests": {"passed": ["test_bytesio_full", "test_restores_position", "test_str_and_bytes"], "failed": ["test_partially_read"], "f2p_ok": false, "p2p_ok": true}}
+{"model": "e4b", "protocol": "edit_file_v+hint", "task": "req_get_encoding_from_headers", "repair_info": {"reason": "new too short"}, "repaired": null}

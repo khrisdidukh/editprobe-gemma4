@@ -9,3 +9,6 @@ Replay of logged edits. `base` = plain replacement (what was scored). `repair` =
 | e2b | edit_file_v | 35 | 10 | 3 | 1 | 1 | 0 | **10** |
 | e2b | edit_file_v+hint | 35 | 33 | 0 | 0 | 0 | 0 | **33** |
 | e4b | edit_file | 35 | 16 | 1 | 1 | 1 | 0 | **16** |
+| e4b | edit_file+hint | 35 | 33 | 1 | 0 | 0 | 0 | **33** |
+| e4b | edit_file_v | 35 | 15 | 2 | 1 | 1 | 0 | **15** |
+| e4b | edit_file_v+hint | 35 | 33 | 1 | 0 | 0 | 0 | **33** |

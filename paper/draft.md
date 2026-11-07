@@ -6,47 +6,42 @@
 
 ## Abstract
 
-[TO BE WRITTEN FROM FINAL NUMBERS]
+Small open models fail most bug-fixing tasks in the Gemma 4 Developer Agent competition, but it is unclear which step fails. EditProbe is a 35-task diagnostic that hands the model the one buggy file (18–97 lines) and scores the edit it makes under the competition's tool semantics, with hidden tests as the judge. Run on two CPU cores with Gemma 4 E2B and E4B across four edit protocols, it shows that landing an edit is not the problem: given the fix in words, both models land it in 94–97% of tasks. Without the hint they resolve 26–51% (E2B) and 43–63% (E4B). E2B loses tasks to no-op edits and duplicated code; E4B's edits are clean but often change the wrong lines. In both models, an edit that misses the buggy lines almost never passes. Whole-file rewrites beat `edit_file` for both sizes.
 
 ## 1. Introduction
 
-The Gemma 4 Developer Agent competition asks for an offline agent that fixes bugs in Python repositories. The agent reads files, runs commands and changes code through a small tool set; the change itself goes through `edit_file(filepath, old_string, new_string)` or `write_file(filepath, content)`. A task counts only if the patched repository passes hidden tests.
+The Gemma 4 Developer Agent competition asks for an offline agent that fixes bugs in Python repositories. The agent reads files, runs commands and changes code through a small tool set; the change itself goes through `edit_file(filepath, old_string, new_string)` or `write_file(filepath, content)`. Hidden tests decide.
 
 Public dev-set numbers show how little the small models manage: in a pre-registered study of 104 public tasks, Gemma 4 E4B resolved 10% of tasks with a minimal scaffold and 15% with a maximal one (Toeda, 2026). The gold patches in that dev set are small: median 12 changed lines, 91 of 129 tasks touch one file (Fearoff5214, 2026). So a large share of the work is: find a few lines, write a few lines, land them in the file.
 
-This note isolates the last two steps. We remove localization across a repository (the model sees the one file that contains the bug, 18–97 lines) and ask: when a small Gemma 4 model has the bug in front of it, does its edit (a) get emitted as a valid tool call, (b) match the file, (c) leave the file syntactically valid, (d) fix the bug without breaking other tests? We also give the model the gold fix in words to separate "cannot land an edit" from "cannot find the fix".
+This note isolates the last two steps. The model sees the one file that contains the bug (18–97 lines), and we ask: when a small Gemma 4 model has the bug in front of it, does its edit (a) get emitted as a valid tool call, (b) match the file, (c) leave the file syntactically valid, (d) fix the bug without breaking other tests? We also give the model the gold fix in words to separate "cannot land an edit" from "cannot find the fix".
 
 Contributions:
 
-1. **EditProbe**, 35 single-file tasks adapted from the competition's dev-set repositories (requests, rich, httpx), each with a user-style problem statement, a 1–5 line gold fix and hidden FAIL_TO_PASS / PASS_TO_PASS tests. Built and verified by one script.
-2. A harness that drives Gemma 4 through native tool calls on `llama-server`, applies edits with a reimplementation of the harness's three-tier `edit_file` matcher (exact → whitespace-flexible → regex), and logs every model output. CPU only; 2 vCPUs are enough.
-3. Measurements for E2B and E4B (official QAT q4_0 GGUF) across four edit protocols, with and without the gold fix given as a hint. [KD: one-sentence headline once numbers are final]
+1. **EditProbe**, 35 single-file tasks adapted from the competition's dev-set repositories (requests, rich, httpx), each with a user-style problem statement, a 1–5 line gold fix and hidden FAIL_TO_PASS / PASS_TO_PASS tests.
+2. A harness that drives Gemma 4 through native tool calls on `llama-server`, applies edits with a reimplementation of the harness's three-tier `edit_file` matcher (exact → whitespace-flexible → regex), and logs every model output.
+3. Measurements for E2B and E4B (official QAT q4_0 GGUF) across four edit protocols, with and without the gold fix given as a hint. Both models land a known fix almost perfectly; without the fix, the edit usually fails because it touches the wrong lines.
 4. A named failure mode, **span mismatch** (new_string covers more of the file than old_string, so a plain replacement duplicates code), and a harness-side repair that recovers part of it without any model change.
 
-Everything here is cheap to re-run: the full grid took [TBD] hours on two CPU cores. Nothing is gated or paid.
+The full grid (560 attempts) re-runs in about 10 hours on two CPU cores; nothing is gated or paid.
 
 ## 2. Related work
 
-**Repository-level bug fixing.** SWE-bench (Jimenez et al., 2024) set the task format the competition uses: issue text in, patch out, hidden tests decide. SWE-agent (Yang et al., 2024) showed that the *agent–computer interface* — how files are viewed and edited — changes success rates by several points for the same model, and introduced linting of edits before they are accepted. Agentless (Xia et al., 2024) split the problem into localization, repair and validation and found that a simple pipeline competes with agents. OpenHands (Wang et al., 2024) is the common open framework. Our tasks sit at the "repair" end of that split, with localization given.
+**Repository-level bug fixing.** SWE-bench (Jimenez et al., 2024) set the format the competition uses: issue in, patch out, hidden tests decide. SWE-agent (Yang et al., 2024) showed that the agent–computer interface (how files are viewed and edited) moves success rates for the same model, and lints edits before accepting them. Agentless (Xia et al., 2024) splits the work into localization, repair and validation; OpenHands (Wang et al., 2024) is the common open framework. Our tasks sit at the repair end, with file-level localization given.
 
-**Edit formats.** Aider's edit-format experiments (Gauthier, 2023) found that unified diffs cut "lazy" partial rewrites of GPT-4 Turbo, and Aider ships whole-file, search/replace and udiff formats with per-model defaults. Diff-XYZ (Glukhov et al., 2025) benchmarks applying, reversing and generating diffs in several formats and reports that the best format depends on model size; search/replace generation worked well for large proprietary models but faithful application was weak, and small open models scored near zero. We ask the same question for one model family, two small sizes, and the exact tool semantics of the competition harness, with tests as the judge rather than exact match.
+**Edit formats.** Aider (Gauthier, 2023) found that unified diffs reduced "lazy" partial rewrites of GPT-4 Turbo and ships whole-file, search/replace and udiff formats with per-model defaults. Diff-XYZ (Glukhov et al., 2025) reports that the best diff format depends on model size and that small open models score near zero. We ask the same question for two small Gemma 4 sizes under the competition's exact tool semantics, with tests as the judge.
 
-**Synthetic bugs in real code.** SWE-smith (Yang et al., 2025) injects bugs into real repositories at scale to make training data; HumanEvalFix (Muennighoff et al., 2023) gives small buggy functions with tests; QuixBugs and Defects4J are the classic small-program and Java sets. EditProbe is far smaller and hand-made, but every bug is in code adapted from the competition's own dev repositories and every task has a verified gold fix.
+**Synthetic bugs.** SWE-smith (Yang et al., 2025) and HumanEvalFix (Muennighoff et al., 2023) inject bugs into real code; EditProbe is smaller but uses the competition's own dev repositories.
 
-**Gemma 4 agents in this competition.** Toeda (2026) measured scaffold effects for E4B, 12B and 26B-A4B on the public tasks (E4B: 10.0% → 15.4%). A study of tool-call loops in Gemma 4 31B and 12B (Gemma4_paper_track, 2026) found that at 12B loops often sit on failing edits and truncated reads. We measure the failing edits themselves.
+**Gemma 4 agents.** Toeda (2026) measured scaffold effects for E4B, 12B and 26B-A4B on the public tasks. A study of tool-call loops in Gemma 4 31B and 12B (Gemma4_paper_track, 2026) found that loops often sit on failing edits. We measure the failing edits themselves.
 
 ## 3. EditProbe
 
 ### 3.1 Tasks
 
-Each task is one directory: `src.py` (buggy module), `gold.py`, `test_task.py` (hidden), `task.json` (problem statement, source attribution, gold region). We wrote them as follows.
+Each task is a directory with `src.py` (buggy module), `gold.py`, hidden `test_task.py` and `task.json` (problem statement, source, gold region). To build one we took a function or small class from requests, rich or httpx (14 modules, e.g. `requests/utils.py`, `rich/cells.py`, `httpx/_urlparse.py`), made it standalone, wrote 4–5 pytest tests, and injected one bug as a string replacement: off-by-one, dropped `.lower()`, wrong constant, missing `max(...)`, removed branch, wrong regex, inverted condition. The reversed mutation is the gold fix. The problem statement reads like a user report (observed vs expected output), never naming the line or the fix. Licenses (Apache-2.0, MIT, BSD-3) are in `NOTICE`.
 
-- Pick a function or small class from `requests/utils.py`, `requests/structures.py`, `rich/_loop.py`, `rich/_ratio.py`, `rich/cells.py`, `rich/_wrap.py`, `rich/filesize.py`, `rich/markup.py`, `rich/color*.py`, `httpx/_decoders.py`, `httpx/_utils.py`, `httpx/_urlparse.py`, `httpx/_multipart.py`, `httpx/_config.py` and make it standalone (docstrings kept, imports inlined). Licenses: Apache-2.0, MIT, BSD-3; see `NOTICE`.
-- Write 4–5 pytest tests.
-- Inject one bug as a string replacement (`mutation = (gold_text, buggy_text)`): off-by-one, dropped `.lower()`, wrong constant, missing `max(...)`, removed branch, wrong regex, inverted condition, lost tail element. The reversed mutation is the gold fix.
-- Write the problem statement as a user would: observed output, expected output, what still works. Never the line number or the fix.
-
-`bench/build_tasks.py` materializes the 35 tasks and refuses any task where the gold module fails a test, the buggy module passes all tests, or the mutation string is not unique. Table 1 summarizes the set.
+`bench/build_tasks.py` refuses any task where the gold module fails a test, the buggy module passes all tests, or the mutation is not unique.
 
 | | |
 |---|---|
@@ -71,7 +66,7 @@ The **hint** condition appends the gold fix in words: "The bug is in these lines
 
 ### 3.3 Matcher
 
-HARNESS_README describes `edit_file` as "tries an exact match, then a whitespace-flexible match, then a regex match; fails when more than one place matches". We do not have the harness source, so `harness/matcher.py` is our reading of that sentence: tier 1 exact substring (must be unique); tier 2 the same tokens with any whitespace between them (`\s+`), unique; tier 3 `old_string` compiled as a Python regex, unique. Every applied edit is tagged with its tier.
+The competition README says `edit_file` tries an exact match, then a whitespace-flexible match, then a regex match, and fails when more than one place matches. `harness/matcher.py` is our reading of that: exact substring, then the same tokens with any whitespace between them, then `old_string` as a Python regex; each tier requires a unique match. Every applied edit is tagged with its tier.
 
 ### 3.4 Failure ladder
 
@@ -79,92 +74,103 @@ Each attempt ends at exactly one stage:
 
 `no_tool_call` · `bad_args` · `no_diff_found` → `old_not_found` · `old_ambiguous` · `patch_failed` · `truncated_output` → `noop_edit` (file unchanged) → `syntax_error` → `tests_fail` · `tests_fail_regression` (FAIL_TO_PASS fixed, a PASS_TO_PASS broken) → `pass`.
 
-`pass` follows the competition rule: pytest exits 0 and every FAIL_TO_PASS and PASS_TO_PASS test passes. We also record `extraneous_lines` (changed lines of `src.py` outside the gold region), completion tokens and wall time.
+`pass` follows the competition rule: every FAIL_TO_PASS and PASS_TO_PASS test passes. We also record changed lines outside the gold region, output tokens and wall time.
 
 ### 3.5 Setup
 
-llama.cpp commit 954de24 (6 Nov 2026) built for CPU; `llama-server --jinja`, context 8192, 2 threads. Models: `google/gemma-4-E2B-it-qat-q4_0-gguf` and `google/gemma-4-E4B-it-qat-q4_0-gguf` (official QAT checkpoints, not gated). Temperature 0, thinking off, one attempt per task, `max_tokens` 1200 (3000 for `write_file`). Machine: 2 vCPU, 7.8 GB RAM. E2B generates at 10–12 tokens/s here.
-
-The competition serves `*-it-qat-w4a16-ct` through vLLM; our GGUF q4_0 files are the same QAT family in a different container. Tool calls use llama.cpp's Gemma 4 chat template, which is not byte-identical to vLLM's parser. Both are limitations, and both are reproducible.
+llama.cpp commit 954de24 (6 Nov 2026) built for CPU; `llama-server --jinja`, 2 threads, context 8192 (6144 for part of the E4B runs; prompts are under 1k tokens, so this does not change outputs). Models: `google/gemma-4-E2B-it-qat-q4_0-gguf` and `google/gemma-4-E4B-it-qat-q4_0-gguf` (official QAT checkpoints, not gated). Temperature 0, thinking off, one attempt per task, `max_tokens` 1200 (3000 for `write_file`). Machine: 2 vCPU, 7.8 GB RAM. E2B generates at 10–12 tokens/s here.
 
 ## 4. Results
 
-All numbers: 35 tasks, one attempt each, temperature 0. The raw records (full model output, parsed edit, matcher tier, test output) are in `results/*.jsonl`; the tables below are produced by `harness/analyze.py` and `harness/rescore.py`.
+All numbers: 35 tasks, one attempt each, temperature 0. Raw records (model output, parsed edit, matcher tier, test output) are in `results/*.jsonl`; tables come from `harness/analyze.py` and `harness/rescore.py`.
 
 ### 4.1 Gemma 4 E2B
 
-**Table 2. E2B by protocol, without and with the gold fix given as a hint.** "applied" = the edit reached the file; "resolved" = all hidden tests pass (bootstrap 95% CI over tasks).
+**Table 2. E2B by protocol, without and with the gold fix as a hint.** "applied" = the edit reached the file; "resolved" = all hidden tests pass (bootstrap 95% CI over tasks).
 
-| protocol | tool call ok | applied | compiles | resolved | 95% CI | == gold | mean tokens out | mean s/task |
-|---|---|---|---|---|---|---|---|---|
-| edit_file | 35 | 32 | 27 | **9 (26%)** | 11–40% | 3 | 210 | 23 |
-| edit_file_v | 35 | 33 | 30 | **10 (29%)** | 14–46% | 5 | 192 | 18 |
-| udiff | 35 | 31 | 31 | **10 (29%)** | 14–43% | 6 | 156 | 18 |
-| write_file | 33 | 33 | 33 | **18 (51%)** | 34–69% | 9 | 481 | 48 |
-| edit_file + hint | 35 | 35 | 34 | **34 (97%)** | 91–100% | 34 | 75 | 10 |
-| edit_file_v + hint | 35 | 35 | 35 | **33 (94%)** | 86–100% | 32 | 75 | 7 |
-| udiff + hint | 35 | 29 | 28 | **25 (71%)** | 57–86% | 22 | 116 | 14 |
-| write_file + hint | 35 | 35 | 35 | **34 (97%)** | 91–100% | 31 | 475 | 47 |
+| protocol | applied | compiles | resolved | 95% CI | == gold | mean tokens out |
+|---|---|---|---|---|---|---|
+| edit_file | 32 | 27 | **9 (26%)** | 11–40% | 3 | 210 |
+| edit_file_v | 33 | 30 | **10 (29%)** | 14–46% | 5 | 192 |
+| udiff | 31 | 31 | **10 (29%)** | 14–43% | 6 | 156 |
+| write_file | 33 | 33 | **18 (51%)** | 34–69% | 9 | 481 |
+| edit_file + hint | 35 | 34 | **34 (97%)** | 91–100% | 34 | 75 |
+| edit_file_v + hint | 35 | 35 | **33 (94%)** | 86–100% | 32 | 75 |
+| udiff + hint | 29 | 28 | **25 (71%)** | 57–86% | 22 | 116 |
+| write_file + hint | 35 | 35 | **34 (97%)** | 91–100% | 31 | 475 |
 
-**Landing an edit is not E2B's problem.** Given the fix in words, `edit_file` lands it and passes the tests in 34 of 35 tasks, and 34 of those 35 files are byte-identical to the gold file. Every `old_string` matched at the exact tier; the whitespace-flexible and regex tiers were never needed. The one failure is a span mismatch (below). `write_file` with the hint is equally good (34/35, 31 byte-identical). Unified diffs are the weak format for transcription: 6 of 35 diffs did not apply under any of our six passes (wrong context lines, hallucinated `-` lines) and 3 applied but changed nothing.
+**Landing an edit is not E2B's problem.** Given the fix in words, `edit_file` passes in 34 of 35 tasks, all 34 byte-identical to the gold file, and every `old_string` matched at the exact tier: the whitespace-flexible and regex tiers were never needed. Unified diffs are the weak format even for transcription: 6 of 35 did not apply under any of our passes (wrong context, invented `-` lines) and 3 changed nothing.
 
-**Without the hint, the protocol changes the outcome by a factor of two.** Rewriting the whole file resolves 18 tasks; search/replace resolves 9 (10 with the verbatim-copy instruction); unified diff 10. The union over the four protocols is 21 tasks; only 4 tasks are solved by all four. `write_file` costs 2.3× the output tokens and 2× the wall time of `edit_file`, and it did not damage the files: 22 of 33 rewrites changed no line outside the gold region, and the mean number of extraneous changed lines is 0.5 (max 4).
+**Without the hint, the protocol changes the outcome by a factor of two.** `write_file` resolves 18 tasks, search/replace 9–10, unified diff 10. The union over the four protocols is 21 tasks; only 4 are solved by all four. `write_file` costs 2.3× the output tokens of `edit_file` and did not damage files: mean 0.5 changed lines outside the gold region (max 4).
 
-Figure 1 shows where the attempts end.
+![Figure 1. Where attempts end, per model and condition.](results/ladder.png)
 
-![Figure 1. Failure ladder per condition.](results/ladder.png)
+Figure 1 shows three E2B failure modes.
 
-**Table 3. Failure ladder, E2B without hint.**
+*No-op edits.* In 6–9 tasks per protocol the model emits a valid edit that changes nothing: `new_string == old_string`, a rewrite identical to the input, or a diff whose `+` and `-` lines are equal. One task (`rich_filesize_decimal`) is a no-op under all four protocols. An agent loop that only checks for errors sees progress.
 
-| protocol | no tool call | old_string not found | patch failed | no-op edit | syntax error | tests fail | regression | pass |
-|---|---|---|---|---|---|---|---|---|
-| edit_file | 0 | 3 | – | 6 | 5 | 10 | 2 | 9 |
-| edit_file_v | 0 | 2 | – | 8 | 3 | 10 | 2 | 10 |
-| udiff | – | – | 4 | 8 | 0 | 11 | 2 | 10 |
-| write_file | 2 | – | – | 9 | 0 | 6 | 0 | 18 |
+*Span mismatch.* All 5 syntax errors in `edit_file` and all 3 in `edit_file_v` have one shape: `new_string` repeats 2–20 lines that sit before or after `old_string`, so the replacement duplicates them. A harness-side **anchor repair** (when the plain replacement does not compile, extend the replaced region to the first and last lines of `new_string` if each occurs once within 80 lines) makes 3 of 4 repairable edits compile and turns one into a pass (Table 5). It never touches an edit that compiles, so it cannot lower the score.
 
-Three failure modes stand out.
-
-*No-op edits.* In 6–9 of 35 tasks per protocol the model emits a syntactically perfect edit that changes nothing: `new_string == old_string`, or a whole-file rewrite identical to the input, or a diff whose `+` lines equal its `-` lines. One task (`rich_filesize_decimal`) is a no-op under all four protocols and eight tasks under at least two. These attempts cost a tool call and look like progress to an agent loop that only checks for errors. With the hint, no-ops fall to 0–1 (3 for udiff).
-
-*Span mismatch.* All 5 syntax errors in `edit_file` and all 3 in `edit_file_v` have the same shape: `new_string` repeats lines that sit before or after `old_string` in the file (2 to 20 lines), so the replacement duplicates them. In one case (`httpx_timeout`) the correct fix was inside that overflow, outside the `old_string` span. A harness-side **anchor repair** — when the plain replacement does not compile, extend the replaced region to the first and last lines of `new_string` if each is found exactly once within 80 lines — makes 3 of the 4 repairable edits compile and turns `httpx_timeout` into a pass (Table 5). The repair never touches an edit that compiles, so it cannot lower the score.
-
-*Hallucinated `old_string`.* 3 of 35 (`edit_file`) and 2 (`edit_file_v`) did not match: the model renamed an identifier or dropped a token while "copying" (e.g. `HEADER_VALIDATORS` → `_HEADER_VALIDATORS`, `(1 << 32 - mask) - 1` → `(1 << 33 - mask)`). These are not whitespace problems, so the harness's flexible tiers would not rescue them.
-
-**Localization inside a 50-line file is the real bottleneck.** Among applied `edit_file` edits, only 14 of 32 touched the gold lines at all; 7 of those 14 resolved, against 2 of 18 that edited elsewhere. `write_file` touched the gold lines in 21 of 33 rewrites (17 resolved). The whole-file protocol seems to let the model re-read and re-emit the function it is fixing, where search/replace asks it to commit to a region first; [KD: this is an interpretation — keep, soften, or cut].
-
-**Table 5. Anchor repair, replayed on the logged edits (no model calls).**
-
-| condition | base resolved | syntax errors | repair compiles | repaired → pass | resolved with repair |
-|---|---|---|---|---|---|
-| E2B edit_file | 9 | 5 | 3 of 4 attempted | 1 | **10** |
-| E2B edit_file_v | 10 | 3 | 1 of 1 | 0 | 10 |
-| E2B edit_file + hint | 34 | 1 | 0 of 0 | 0 | 34 |
-| [E4B rows TBD] | | | | | |
+*Hallucinated `old_string`.* 5 edits across the two search/replace protocols did not match because the model renamed an identifier while copying (`HEADER_VALIDATORS` → `_HEADER_VALIDATORS`). These are not whitespace problems; the flexible tiers cannot rescue them.
 
 ### 4.2 Gemma 4 E4B
 
-[E4B RESULTS TBD — runs in progress]
+**Table 4. E4B, same protocols.**
+
+| protocol | applied | compiles | resolved | 95% CI | == gold | mean tokens out |
+|---|---|---|---|---|---|---|
+| edit_file | 34 | 33 | **16 (46%)** | 29–63% | 13 | 113 |
+| edit_file_v | 34 | 32 | **15 (43%)** | 26–60% | 11 | 117 |
+| udiff | 32 | 32 | **17 (49%)** | 31–66% | 14 | 149 |
+| write_file | 35 | 35 | **22 (63%)** | 46–80% | 8 | 510 |
+| edit_file + hint | 35 | 34 | **33 (94%)** | 86–100% | 32 | 68 |
+| edit_file_v + hint | 35 | 34 | **33 (94%)** | 86–100% | 31 | 70 |
+| udiff + hint | 32 | 32 | **30 (86%)** | 74–97% | 25 | 115 |
+| write_file + hint | 35 | 35 | **34 (97%)** | 91–100% | 28 | 474 |
+
+**E4B fixes the mechanics, not the diagnosis.** No-op edits almost disappear (0 in `edit_file`, against 6 for E2B), syntax errors drop to 1–2, and unified diffs apply in 32 of 35 tasks, with or without the hint. Resolution rises to 43–63% and the four protocols agree far more: 12 tasks are solved by all four (E2B: 4), 23 by at least one. The dominant failure is now `tests_fail`, a clean compiling edit with the wrong lines or logic: 16 of 35 for `edit_file`. `write_file` is still the best protocol without a hint, but its lead over `edit_file` shrinks from 2× to 1.4×. The verbatim-copy instruction (`edit_file_v`) helps neither model.
+
+**Localization separates success from failure in both models.** We check whether an applied edit's removed lines intersect the buggy lines:
+
+| condition | applied | touched gold lines | resolved if touched | resolved if not |
+|---|---|---|---|---|
+| E2B edit_file | 32 | 14 | 7/14 | 2/18 |
+| E2B write_file | 33 | 21 | 17/21 | 1/12 |
+| E4B edit_file | 34 | 22 | 15/22 | 1/12 |
+| E4B write_file | 35 | 24 | 21/24 | 1/11 |
+
+Across the four rows, edits that miss the buggy lines pass 5 times in 53 attempts. E4B localizes better than E2B (22 vs 14 of the applied `edit_file` edits), and that is most of its gain. Nine tasks were never solved without the hint by either model under any protocol; with the hint, every task is solved by both.
+
+**Table 5. Anchor repair, replayed on the logged edits (no model calls).**
+
+| condition | base resolved | syntax errors | repair compiles | resolved with repair |
+|---|---|---|---|---|
+| E2B edit_file | 9 | 5 | 3 of 4 attempted | **10** |
+| E2B edit_file_v | 10 | 3 | 1 of 1 | 10 |
+| E4B edit_file | 16 | 1 | 1 of 1 | 16 |
+| E4B edit_file_v | 15 | 2 | 1 of 1 | 15 |
+
+The repair matters for E2B and is idle for E4B, which rarely produces span mismatches.
 
 ### 4.3 Cost
 
-The whole E2B grid (8 conditions × 35 tasks) took [TBD] hours of wall time on two CPU cores; E4B [TBD]. Prompts are 685–833 tokens on average; `write_file` answers are a median 448 tokens.
+E2B's grid (8 conditions × 35 tasks) took 1.8 hours of wall time on two CPU cores; E4B's took 7.9 hours, inflated by shared-machine load and several container restarts (runs resume per task). Prompts average 685–833 tokens; `write_file` answers about 480.
 
 ## 5. What this means for an agent built on E2B/E4B
 
-1. **For files that fit in one `read_file` window, prefer `write_file` over `edit_file` on E2B.** It doubled the resolve rate here at ~2× the tokens. The competition's `write_file` tool exists; the sample agent instructions push `edit_file`. [KD: you may want to state this more carefully — it is one benchmark, 35 tasks]
-2. **Check for no-op edits in the harness or the instruction.** A tool result that says "file unchanged" (string compare before/after) is free and would have flagged 17–26% of E2B's edits.
-3. **Add anchor repair to the edit tool.** It is 40 lines, replayable, and only acts when the plain edit does not compile.
-4. **Do not ask E2B for unified diffs.** Even when told the exact fix, 10 of 35 diffs failed to land or changed nothing.
-5. **Localization, not transcription, is where to spend tokens.** With the fix known, E2B lands it 97% of the time in 75 tokens. Agent designs that first make the model name the lines to change (and verify they exist) and only then edit would address the failure we actually observe.
+1. **Spend tokens on localization, not on edit formats.** With the fix known, both models land it in 94–97% of tasks for about 70 output tokens. Without it, an edit that misses the buggy lines almost never passes. An agent that first makes the model name the lines it will change (and checks they exist and relate to the failing test) targets the failure we actually observe.
+2. **For files that fit in one `read_file` window, consider `write_file`.** It led for both sizes here (51% vs 26% on E2B, 63% vs 46% on E4B) at 2.3–4.5× the output tokens. This is one 35-task benchmark; the intervals overlap for E4B.
+3. **Report no-op edits back to the model.** A string compare before and after the edit is free and would have flagged 17–26% of E2B's edits.
+4. **Add anchor repair to `edit_file` if you run E2B.** It is about 40 lines and acts only when the plain edit does not compile.
+5. **Do not ask E2B for unified diffs.** Even with the exact fix, 10 of 35 failed to land or changed nothing. E4B handles diffs well.
 
 ## 6. Limitations
 
-- 35 tasks, one attempt each at temperature 0. Confidence intervals are wide (bootstrap over tasks); differences of a few tasks are not evidence.
-- Bugs are injected mutations in code we made standalone; real issues are longer and the files larger. Our file sizes stay under one `read_file` call (150 lines), by design.
-- The matcher and the apply policy are reimplemented from the README's description.
-- Thinking was off. [KD: decide whether to keep or cut any thinking-on subset results]
-- Tasks were written by one person who also knows the models' typical mistakes; they were written before any model run, and no task was changed after seeing results.
+- 35 tasks, one attempt each at temperature 0. Confidence intervals are wide; differences of a few tasks are not evidence.
+- Bugs are injected mutations in code we made standalone. Real issues are longer and files larger; ours stay under one `read_file` call (150 lines) by design.
+- The matcher is reimplemented from the competition README; the GGUF q4_0 files are the same QAT family as the competition's w4a16 checkpoints in a different container, and llama.cpp's tool-call parser differs from vLLM's.
+- Thinking was off for all runs.
+- One person wrote the tasks before any model run; no task was changed after seeing results.
 
 ## References
 
@@ -177,7 +183,7 @@ The whole E2B grid (8 conditions × 35 tasks) took [TBD] hours of wall time on t
 - Yang, J., Lieret, K., Jimenez, C. E., Wettig, A., Khandpur, K., Zhang, Y., Hui, B., Press, O., Schmidt, L., Yang, D. (2025). SWE-smith: Scaling Data for Software Engineering Agents. arXiv:2504.21798.
 - Muennighoff, N. et al. (2023). OctoPack: Instruction Tuning Code Large Language Models. arXiv:2308.07124 (HumanEvalFix).
 - Toeda, T. (2026). Scaffolding Helps the Smallest Gemma 4 Agent, Not the Larger Ones: run records, pre-registration and analysis code. Zenodo. doi:10.5281/zenodo.23834104.
-- Gemma4_paper_track (2026). Why Gemma 4 31B loops on tool calls: ablations G1–G4 and a 12B control. https://github.com/usp787/Gemma4_paper_track (findings.md). [KD: the author name is not given in the repo; keep as repository citation or drop]
+- Gemma4_paper_track (2026). Why Gemma 4 31B loops on tool calls: ablations G1–G4 and a 12B control. https://github.com/usp787/Gemma4_paper_track (findings.md).
 - Fearoff5214 (2026). Gemma_4_Kaggle_hackathon: dataset inventory and harness notes. https://github.com/Fearoff5214/Gemma_4_Kaggle_hackathon
 - Google DeepMind (2026). Gemma 4. https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/ (released 2 Apr 2026, Apache-2.0).
 - Kaggle (2026). Google – The Gemma 4 Developer Agent; Paper Track. https://www.kaggle.com/competitions/gemma-4-developer-agent-paper

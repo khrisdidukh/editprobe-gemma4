@@ -60,3 +60,38 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.13/urllib/request.py", line 1334, in do_open
     raise URLError(err)
 urllib.error.URLError: <urlopen error [Errno 111] Connection refused>
+[1/35] httpx_byte_chunker               pass                   tier=whole_file tok=350 138.1s  resolved so far 1
+[2/35] httpx_cookie_domain              pass                   tier=whole_file tok=443 169.3s  resolved so far 2
+[3/35] httpx_line_decoder               pass                   tier=whole_file tok=550 209.7s  resolved so far 3
+[4/35] httpx_multipart_boundary         pass                   tier=whole_file tok=293 113.0s  resolved so far 4
+[5/35] httpx_normalize_port             pass                   tier=whole_file tok=410 162.8s  resolved so far 5
+[6/35] httpx_obfuscate_headers          pass                   tier=whole_file tok=296 112.7s  resolved so far 6
+[7/35] httpx_peek_filelike_length       pass                   tier=whole_file tok=328 126.1s  resolved so far 7
+[8/35] httpx_primitive_value            pass                   tier=whole_file tok=208  79.2s  resolved so far 8
+[9/35] httpx_same_origin                pass                   tier=whole_file tok=429 161.9s  resolved so far 9
+[10/35] httpx_text_chunker               pass                   tier=whole_file tok=458 180.2s  resolved so far 10
+[11/35] httpx_timeout                    pass                   tier=whole_file tok=829 311.0s  resolved so far 11
+[12/35] httpx_url_pattern                pass                   tier=whole_file tok=731 269.7s  resolved so far 12
+[13/35] req_case_insensitive_dict        pass                   tier=whole_file tok=515 192.8s  resolved so far 13
+[14/35] req_check_header_validity        pass                   tier=whole_file tok=530 194.5s  resolved so far 14
+[15/35] req_dotted_netmask               pass                   tier=whole_file tok=420 155.5s  resolved so far 15
+[16/35] req_get_auth_from_url            pass                   tier=whole_file tok=282 104.5s  resolved so far 16
+[17/35] req_get_encoding_from_headers    pass                   tier=whole_file tok=437 162.7s  resolved so far 17
+[18/35] req_guess_json_utf               pass                   tier=whole_file tok=500 188.0s  resolved so far 18
+[19/35] req_iter_slices                  pass                   tier=whole_file tok=324 120.1s  resolved so far 19
+[20/35] req_parse_dict_header            pass                   tier=whole_file tok=446 166.2s  resolved so far 20
+[21/35] req_parse_header_links           pass                   tier=whole_file tok=291 112.1s  resolved so far 21
+[22/35] req_prepend_scheme               pass                   tier=whole_file tok=483 172.9s  resolved so far 22
+[23/35] req_super_len                    pass                   tier=whole_file tok=476 180.0s  resolved so far 23
+[24/35] req_unquote_unreserved           pass                   tier=whole_file tok=537 197.5s  resolved so far 24
+[25/35] rich_ansi_strip                  pass                   tier=whole_file tok=207 154.8s  resolved so far 25
+[26/35] rich_chop_cells                  pass                   tier=whole_file tok=740 845.9s  resolved so far 26
+[27/35] rich_color_triplet               pass                   tier=whole_file tok=603 733.8s  resolved so far 27
+[28/35] rich_divide_line                 pass                   tier=whole_file tok=892 325.8s  resolved so far 1
+[29/35] rich_filesize_decimal            pass                   tier=whole_file tok=580 210.1s  resolved so far 2
+[30/35] rich_lookup_pick_bool            pass                   tier=whole_file tok=187  69.9s  resolved so far 3
+[31/35] rich_loop_last                   pass                   tier=whole_file tok=358 131.9s  resolved so far 4
+[32/35] rich_markup_escape               noop_edit              tier=whole_file tok=400 145.9s  resolved so far 4
+[33/35] rich_ratio_distribute            pass                   tier=whole_file tok=653 238.2s  resolved so far 5
+[34/35] rich_ratio_resolve               pass                   tier=whole_file tok=736 272.6s  resolved so far 6
+[35/35] rich_style_parse_color           pass                   tier=whole_file tok=677 249.9s  resolved so far 7
