@@ -77,7 +77,7 @@ The competition README says `edit_file` tries an exact match, then a whitespace-
 Each attempt ends at exactly one stage (Figure 1).
 
 <figure>
-<img src="https://raw.githubusercontent.com/khrisdidukh/editprobe-gemma4/main/results/ladder_scheme.png" alt="Figure 1. The failure ladder." />
+![Figure 1. The failure ladder.](https://raw.githubusercontent.com/khrisdidukh/editprobe-gemma4/main/results/ladder_scheme.png)
 <figcaption aria-hidden="true">Figure 1. The failure ladder.</figcaption>
 </figure>
 
@@ -113,7 +113,7 @@ Raw records are in `results/*.jsonl`.
 **Without the hint, the protocol changes the outcome by a factor of two.** `write_file` resolves 18 tasks, search/replace 9–10, unified diff 10. The union over the four protocols is 21 tasks; only 4 are solved by all four. `write_file` costs 2.3× the output tokens of `edit_file` and did not damage files: mean 0.5 changed lines outside the gold region (max 4).
 
 <figure>
-<img src="https://raw.githubusercontent.com/khrisdidukh/editprobe-gemma4/main/results/ladder.png" alt="Figure 2. Where attempts end, per model and condition." />
+![Figure 2. Where attempts end, per model and condition.](https://raw.githubusercontent.com/khrisdidukh/editprobe-gemma4/main/results/ladder.png)
 <figcaption aria-hidden="true">Figure 2. Where attempts end, per model and condition.</figcaption>
 </figure>
 
