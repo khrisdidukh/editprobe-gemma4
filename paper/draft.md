@@ -2,7 +2,7 @@
 
 **Subtitle:** A 35-task diagnostic for the `edit_file` step of offline bug-fixing agents, run on CPU with Gemma 4 E2B and E4B
 
-**Author:** Khrystyna Didukh (Vienna). Code, tasks and logs: [KD: GitHub URL], Apache-2.0.
+**Author:** Khrystyna Didukh (Vienna). Code, tasks and logs: https://github.com/khrisdidukh/editprobe-gemma4, Apache-2.0.
 
 ## Abstract
 
