@@ -1,0 +1,416 @@
+<p><strong>Author:</strong> Khrystyna Didukh (Vienna). Code, tasks and logs: <a href="https://github.com/khrisdidukh/editprobe-gemma4" class="uri">https://github.com/khrisdidukh/editprobe-gemma4</a>, Apache-2.0.</p>
+<h2 id="abstract">Abstract</h2>
+<p>Small open models fail most bug-fixing tasks in the Gemma 4 Developer Agent competition, but it is unclear which step fails. EditProbe is a 35-task diagnostic that hands the model the one buggy file (18–97 lines) and scores the edit it makes under the competition's tool semantics, with hidden tests as the judge. On two CPU cores with Gemma 4 E2B and E4B across four edit protocols: given the fix in words, both models land it in 94–97% of tasks. Without the hint they resolve 26–51% (E2B) and 43–63% (E4B). E2B loses tasks to no-op edits and duplicated code; E4B's edits are clean but often change the wrong lines. In both models, an edit that misses the buggy lines almost never passes. Whole-file rewrites beat <code>edit_file</code> for both sizes.</p>
+<h2 id="introduction">1. Introduction</h2>
+<p>The Gemma 4 Developer Agent competition asks for an offline agent that fixes bugs in Python repositories. The agent changes code through <code>edit_file(filepath, old_string, new_string)</code> or <code>write_file(filepath, content)</code>, and hidden tests decide.</p>
+<p>On 104 public tasks, Gemma 4 E4B resolved 10–15% (Toeda, 2026), while the gold patches are small: median 12 changed lines, mostly in one file (Fearoff5214, 2026).</p>
+<p>This note isolates the last two steps. The model sees the one file that contains the bug (18–97 lines), and I ask whether its edit (a) is a valid tool call, (b) matches the file, (c) leaves valid Python, (d) fixes the bug without breaking other tests. I also give the model the gold fix in words, to separate “cannot land an edit” from “cannot find the fix”.</p>
+<p>Contributions:</p>
+<ol type="1">
+<li><strong>EditProbe</strong>, 35 single-file tasks adapted from the competition’s dev-set repositories (requests, rich, httpx), each with a user-style problem statement, a 1–5 line gold fix and hidden FAIL_TO_PASS / PASS_TO_PASS tests.</li>
+<li>A harness that drives Gemma 4 through native tool calls, applies edits with a reimplementation of the competition’s three-tier <code>edit_file</code> matcher, and logs every model output.</li>
+<li>Measurements for E2B and E4B across four edit protocols, with and without the fix as a hint. Both models land a known fix almost perfectly; without it, the edit usually fails because it touches the wrong lines.</li>
+<li>A named failure mode, <strong>span mismatch</strong>, and a harness-side repair for it.</li>
+</ol>
+<h3 id="why-this-question">1.1 Why this question</h3>
+<p>Why do I do this? Because right now, in the world of artificial intelligence, very few people optimise their spending on AI. And also too few people think about privacy. That is why this task was interesting for me: a small task that can help with many things.</p>
+<p>For example, when code cannot be sent to the cloud. This is first of all defense, then banks, medicine, corporations that have no right to send their code to ChatGPT or Claude. They need small local models, like these E2B and E4B, which work on two processor cores, on an ordinary server or a laptop without an expensive graphics card.</p>
+<p>This task is also important for those who build agents on small models. What I found (more on this below) is that the format of the edit is not the main thing. The main thing is that the model correctly finds which lines to change. And this saves weeks of work on unnecessary things. Also, a small local model can solve half of the simple bugs practically for free (here, with the buggy file already given). So we run it first and leave the big models for the more complex cases. It is also important that this paper shows at which step the agent breaks. And this way of analysis can be applied to any agent, not only for code.</p>
+<p>My main human conclusion is that a small offline model already knows how to make edits. It lacks only the skill to find where exactly the error is. And this is a real hint for everyone who wants their own AI programmer without the cloud.</p>
+<p>My work experience regarding this matter is totally under the NDA, so this paper uses only public data and the benchmark described here.</p>
+<h2 id="related-work">2. Related work</h2>
+<p><strong>Bug-fixing agents.</strong> SWE-bench (Jimenez et al., 2024) set the format the competition uses. SWE-agent (Yang et al., 2024) showed that how files are viewed and edited moves success rates for the same model. Agentless (Xia et al., 2024) splits the work into localization, repair and validation; OpenHands (Wang et al., 2024) is the common open framework. My tasks sit at the repair end, with the file given.</p>
+<p><strong>Edit formats.</strong> Aider (Gauthier, 2023) found that unified diffs reduced “lazy” rewrites of GPT-4 Turbo. Diff-XYZ (Glukhov et al., 2025) reports that the best diff format depends on model size and that small open models score near zero. I ask the same question for two small Gemma 4 sizes under the competition’s tool semantics, with tests as the judge.</p>
+<p><strong>Synthetic bugs and Gemma 4.</strong> SWE-smith (Yang et al., 2025) and HumanEvalFix (Muennighoff et al., 2023) inject bugs into real code. Toeda (2026) measured scaffold effects for Gemma 4 on the public tasks, and Gemma4_paper_track (2026) found that tool-call loops often sit on failing edits. I measure the failing edits themselves.</p>
+<h2 id="editprobe">3. EditProbe</h2>
+<h3 id="tasks">3.1 Tasks</h3>
+<p>Each task is a directory with <code>src.py</code> (buggy module), <code>gold.py</code>, hidden <code>test_task.py</code> and <code>task.json</code> (problem statement, source, gold region). To build one I took a function or small class from requests, rich or httpx (14 modules, e.g. <code>requests/utils.py</code>, <code>rich/cells.py</code>, <code>httpx/_urlparse.py</code>), made it standalone, wrote 4–5 pytest tests, and injected one bug as a string replacement: off-by-one, dropped <code>.lower()</code>, wrong constant, missing <code>max(...)</code>, removed branch, wrong regex, inverted condition. The reversed mutation is the gold fix. The problem statement reads like a user report (observed vs expected output), never naming the line or the fix. Licenses (Apache-2.0, MIT, BSD-3) are in <code>NOTICE</code>.</p>
+<p><code>bench/build_tasks.py</code> refuses any task where the gold module fails a test, the buggy module passes all tests, or the mutation is not unique.</p>
+<table style="width:98%;">
+<colgroup>
+<col style="width: 41%" />
+<col style="width: 56%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">tasks</td>
+<td style="text-align: left;">35 (12 requests, 11 rich, 12 httpx)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">module length</td>
+<td style="text-align: left;">median 47 lines (18–97)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">gold fix</td>
+<td style="text-align: left;">1 line in 32 tasks, 2 lines in 1, 5 lines in 2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">problem statement</td>
+<td style="text-align: left;">median 258 characters</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">tests</td>
+<td style="text-align: left;">51 FAIL_TO_PASS, 92 PASS_TO_PASS in total</td>
+</tr>
+</tbody>
+</table>
+<h3 id="protocols">3.2 Protocols</h3>
+<p>The model gets one system message and one user message: problem statement, the whole <code>src.py</code> in a code block, an optional hint, and one instruction line. Four protocols:</p>
+<table style="width:99%;">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 58%" />
+<col style="width: 22%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">protocol</th>
+<th style="text-align: left;">model output</th>
+<th style="text-align: left;">how it is applied</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>edit_file</code></td>
+<td style="text-align: left;">native tool call <code>edit_file(filepath, old_string, new_string)</code></td>
+<td style="text-align: left;">three-tier matcher (below)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>edit_file_v</code></td>
+<td style="text-align: left;">same, with an instruction to copy <code>old_string</code> verbatim with ≥2 lines of context</td>
+<td style="text-align: left;">same</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>write_file</code></td>
+<td style="text-align: left;">native tool call <code>write_file(filepath, content)</code></td>
+<td style="text-align: left;">file replaced</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>udiff</code></td>
+<td style="text-align: left;">unified diff in a fenced block, no tools</td>
+<td style="text-align: left;"><code>git apply</code>, then <code>patch -F3</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>hint</strong> condition appends the gold fix in words: "The bug is in these lines: ‹buggy lines›. They should become: ‹gold lines›". With the hint, the task is pure transcription into an edit.</p>
+<h3 id="matcher">3.3 Matcher</h3>
+<p>The competition README says <code>edit_file</code> tries an exact match, then a whitespace-flexible match, then a regex match, and fails when more than one place matches. <code>harness/matcher.py</code> is my reading of that: exact substring, then the same tokens with any whitespace between them, then <code>old_string</code> as a Python regex; each tier requires a unique match. Every applied edit is tagged with its tier.</p>
+<h3 id="failure-ladder">3.4 Failure ladder</h3>
+<p>Each attempt ends at exactly one stage (Figure 1).</p>
+<figure>
+<img src="https://raw.githubusercontent.com/khrisdidukh/editprobe-gemma4/main/results/ladder_scheme.png" alt="Figure 1. The failure ladder." />
+<figcaption aria-hidden="true">Figure 1. The failure ladder.</figcaption>
+</figure>
+<p>Figure 1. The failure ladder. Every attempt stops at the first stage it fails; the red boxes are the stage labels used in the result tables. <code>tests_fail_regression</code> means FAIL_TO_PASS fixed but a PASS_TO_PASS broken.</p>
+<h3 id="setup">3.5 Setup</h3>
+<p>llama.cpp commit 954de24 (6 Nov 2026), CPU build; <code>llama-server --jinja</code>, 2 threads, context 8192 (6144 for part of the E4B runs; prompts are under 1k tokens). Models: the official QAT checkpoints <code>google/gemma-4-E2B-it-qat-q4_0-gguf</code> and <code>google/gemma-4-E4B-it-qat-q4_0-gguf</code>. Temperature 0, thinking off, one attempt per task, <code>max_tokens</code> 1200 (3000 for <code>write_file</code>). <code>pass</code> follows the competition rule: every FAIL_TO_PASS and PASS_TO_PASS test passes.</p>
+<p>Machine: 2 vCPU, 7.8 GB RAM, no GPU, weaker than most laptops, so anyone can rerun the grid for free.</p>
+<h2 id="results">4. Results</h2>
+<p>Raw records are in <code>results/*.jsonl</code>.</p>
+<h3 id="gemma-4-e2b">4.1 Gemma 4 E2B</h3>
+<p><strong>Table 1. E2B by protocol, without and with the gold fix as a hint.</strong> "applied" = the edit reached the file; "resolved" = all hidden tests pass (bootstrap 95% CI over tasks).</p>
+<table style="width:98%;">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">protocol</th>
+<th style="text-align: left;">applied</th>
+<th style="text-align: left;">compiles</th>
+<th style="text-align: left;">resolved</th>
+<th style="text-align: left;">95% CI</th>
+<th style="text-align: left;">== gold</th>
+<th style="text-align: left;">mean tokens out</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">edit_file</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">27</td>
+<td style="text-align: left;"><strong>9 (26%)</strong></td>
+<td style="text-align: left;">11–40%</td>
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">210</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">edit_file_v</td>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;">30</td>
+<td style="text-align: left;"><strong>10 (29%)</strong></td>
+<td style="text-align: left;">14–46%</td>
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">192</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">udiff</td>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;"><strong>10 (29%)</strong></td>
+<td style="text-align: left;">14–43%</td>
+<td style="text-align: left;">6</td>
+<td style="text-align: left;">156</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">write_file</td>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;"><strong>18 (51%)</strong></td>
+<td style="text-align: left;">34–69%</td>
+<td style="text-align: left;">9</td>
+<td style="text-align: left;">481</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">edit_file + hint</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;"><strong>34 (97%)</strong></td>
+<td style="text-align: left;">91–100%</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;">75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">edit_file_v + hint</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;"><strong>33 (94%)</strong></td>
+<td style="text-align: left;">86–100%</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">75</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">udiff + hint</td>
+<td style="text-align: left;">29</td>
+<td style="text-align: left;">28</td>
+<td style="text-align: left;"><strong>25 (71%)</strong></td>
+<td style="text-align: left;">57–86%</td>
+<td style="text-align: left;">22</td>
+<td style="text-align: left;">116</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">write_file + hint</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;"><strong>34 (97%)</strong></td>
+<td style="text-align: left;">91–100%</td>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;">475</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Landing an edit is not E2B's problem.</strong> Given the fix in words, <code>edit_file</code> passes in 34 of 35 tasks, all 34 byte-identical to the gold file, and every <code>old_string</code> matched at the exact tier: the whitespace-flexible and regex tiers were never needed. Unified diffs are weak even for transcription: 6 of 35 did not apply and 3 changed nothing.</p>
+<p><strong>Without the hint, the protocol changes the outcome by a factor of two.</strong> <code>write_file</code> resolves 18 tasks, search/replace 9–10, unified diff 10. The union over the four protocols is 21 tasks; only 4 are solved by all four. <code>write_file</code> costs 2.3× the output tokens of <code>edit_file</code> and did not damage files: mean 0.5 changed lines outside the gold region (max 4).</p>
+<figure>
+<img src="https://raw.githubusercontent.com/khrisdidukh/editprobe-gemma4/main/results/ladder.png" alt="Figure 2. Where attempts end, per model and condition." />
+<figcaption aria-hidden="true">Figure 2. Where attempts end, per model and condition.</figcaption>
+</figure>
+<p>Figure 2. Where attempts end, per model and condition.</p>
+<p>Figure 2 shows three E2B failure modes.</p>
+<p><em>No-op edits.</em> In 6–9 tasks per protocol the model emits a valid edit that changes nothing: <code>new_string == old_string</code>, a rewrite identical to the input, or a diff whose <code>+</code> and <code>-</code> lines are equal. One task (<code>rich_filesize_decimal</code>) is a no-op under all four protocols. An agent loop that only checks for errors sees progress.</p>
+<p><em>Span mismatch.</em> All 5 syntax errors in <code>edit_file</code> and all 3 in <code>edit_file_v</code> have one shape: <code>new_string</code> repeats 2–20 lines that sit before or after <code>old_string</code>, so the replacement duplicates them. A harness-side <strong>anchor repair</strong> (when the plain replacement does not compile, extend the replaced region to the first and last lines of <code>new_string</code> if each occurs once within 80 lines), replayed on the logged edits, makes 3 of 4 repairable edits compile and raises E2B <code>edit_file</code> from 9 to 10. It never touches an edit that compiles, so it cannot lower the score; for E4B, which rarely makes this mistake, it changes nothing.</p>
+<p><em>Hallucinated</em> <code>old_string</code><em>.</em> 5 edits across the two search/replace protocols did not match because the model renamed an identifier while copying (<code>HEADER_VALIDATORS</code> → <code>_HEADER_VALIDATORS</code>). The flexible matcher tiers cannot rescue these.</p>
+<h3 id="gemma-4-e4b">4.2 Gemma 4 E4B</h3>
+<p><strong>Table 2. E4B, same protocols.</strong></p>
+<table style="width:98%;">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">protocol</th>
+<th style="text-align: left;">applied</th>
+<th style="text-align: left;">compiles</th>
+<th style="text-align: left;">resolved</th>
+<th style="text-align: left;">95% CI</th>
+<th style="text-align: left;">== gold</th>
+<th style="text-align: left;">mean tokens out</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">edit_file</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;"><strong>16 (46%)</strong></td>
+<td style="text-align: left;">29–63%</td>
+<td style="text-align: left;">13</td>
+<td style="text-align: left;">113</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">edit_file_v</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;"><strong>15 (43%)</strong></td>
+<td style="text-align: left;">26–60%</td>
+<td style="text-align: left;">11</td>
+<td style="text-align: left;">117</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">udiff</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;"><strong>17 (49%)</strong></td>
+<td style="text-align: left;">31–66%</td>
+<td style="text-align: left;">14</td>
+<td style="text-align: left;">149</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">write_file</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;"><strong>22 (63%)</strong></td>
+<td style="text-align: left;">46–80%</td>
+<td style="text-align: left;">8</td>
+<td style="text-align: left;">510</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">edit_file + hint</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;"><strong>33 (94%)</strong></td>
+<td style="text-align: left;">86–100%</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">68</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">edit_file_v + hint</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;"><strong>33 (94%)</strong></td>
+<td style="text-align: left;">86–100%</td>
+<td style="text-align: left;">31</td>
+<td style="text-align: left;">70</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">udiff + hint</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;"><strong>30 (86%)</strong></td>
+<td style="text-align: left;">74–97%</td>
+<td style="text-align: left;">25</td>
+<td style="text-align: left;">115</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">write_file + hint</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;"><strong>34 (97%)</strong></td>
+<td style="text-align: left;">91–100%</td>
+<td style="text-align: left;">28</td>
+<td style="text-align: left;">474</td>
+</tr>
+</tbody>
+</table>
+<p><strong>E4B fixes the mechanics, not the diagnosis.</strong> No-op edits almost disappear (0 in <code>edit_file</code>, against 6 for E2B), syntax errors drop to 1–2, and unified diffs apply in 32 of 35 tasks, with or without the hint. Resolution rises to 43–63% and the four protocols agree far more: 12 tasks are solved by all four (E2B: 4), 23 by at least one. The dominant failure is now <code>tests_fail</code>, a clean compiling edit with the wrong lines or logic: 16 of 35 for <code>edit_file</code>. <code>write_file</code> is still the best protocol without a hint, but its lead over <code>edit_file</code> shrinks from 2× to 1.4×. The verbatim-copy instruction (<code>edit_file_v</code>) helps neither model.</p>
+<p><strong>Localization separates success from failure in both models.</strong> I check whether an applied edit's removed lines intersect the buggy lines:</p>
+<table style="width:98%;">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 15%" />
+<col style="width: 22%" />
+<col style="width: 23%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">condition</th>
+<th style="text-align: left;">applied</th>
+<th style="text-align: left;">touched gold lines</th>
+<th style="text-align: left;">resolved if touched</th>
+<th style="text-align: left;">resolved if not</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">E2B edit_file</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">14</td>
+<td style="text-align: left;">7/14</td>
+<td style="text-align: left;">2/18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E2B write_file</td>
+<td style="text-align: left;">33</td>
+<td style="text-align: left;">21</td>
+<td style="text-align: left;">17/21</td>
+<td style="text-align: left;">1/12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E4B edit_file</td>
+<td style="text-align: left;">34</td>
+<td style="text-align: left;">22</td>
+<td style="text-align: left;">15/22</td>
+<td style="text-align: left;">1/12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">E4B write_file</td>
+<td style="text-align: left;">35</td>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">21/24</td>
+<td style="text-align: left;">1/11</td>
+</tr>
+</tbody>
+</table>
+<p>Across the four rows, edits that miss the buggy lines pass 5 times in 53 attempts. E4B localizes better than E2B (22 vs 14 of the applied <code>edit_file</code> edits), and that is most of its gain. Nine tasks were never solved without the hint by either model under any protocol; with the hint, every task is solved by both.</p>
+<h3 id="one-task-up-close">4.3 One task up close</h3>
+<p>Task <code>httpx_normalize_port</code> shows the main pattern in one place. The module keeps a table of default ports, and the bug is a typo: <code>"https": 433</code> instead of <code>443</code>. The problem statement only says that <code>normalize_port("443", "https")</code> returns <code>443</code> instead of <code>None</code>.</p>
+<ul>
+<li><strong>E2B, <code>edit_file</code> and <code>edit_file_v</code>:</strong> an edit whose <code>old_string</code> and <code>new_string</code> are the same four lines of the comparison function. It applies without error and changes nothing.</li>
+<li><strong>E2B, <code>udiff</code>:</strong> rewrites the last line of that function into <code>return port_as_int if port_as_int != default_port else None</code>. It applies and compiles; the tests still fail.</li>
+<li><strong>E4B, <code>edit_file</code>:</strong> replaces <code>433</code> with <code>443</code>, the gold fix.</li>
+<li><strong>E2B, <code>write_file</code>:</strong> the same small model returns exactly the gold file. One possible reason: retyping a familiar table, it restores the value it has seen many times. I did not test this.</li>
+</ul>
+<p>E2B’s search/replace edits went to code close to the bug in meaning but not in place: the localization failure in its simplest form.</p>
+<h3 id="cost">4.4 Cost</h3>
+<p>The full grid (560 attempts) took 1.8 hours for E2B and 7.9 hours for E4B on two CPU cores (inflated by machine load and restarts). Nothing is gated or paid.</p>
+<h2 id="what-this-means-for-an-agent-built-on-e2be4b">5. What this means for an agent built on E2B/E4B</h2>
+<ol type="1">
+<li><strong>Spend tokens on localization, not on edit formats.</strong> With the fix known, both models land it in 94–97% of tasks for about 70 output tokens. Without it, an edit that misses the buggy lines almost never passes. An agent that first makes the model name the lines it will change (and checks they exist and relate to the failing test) targets the failure I actually observe.</li>
+<li><strong>For files that fit in one</strong> <code>read_file</code> <strong>window, consider</strong> <code>write_file</code><strong>.</strong> It led for both sizes here (51% vs 26% on E2B, 63% vs 46% on E4B) at 2.3–4.5× the output tokens. This is one 35-task benchmark; the intervals overlap for E4B.</li>
+<li><strong>Report no-op edits back to the model.</strong> A string compare before and after the edit is free and would have flagged 17–26% of E2B's edits.</li>
+<li><strong>Add anchor repair to</strong> <code>edit_file</code> <strong>if you run E2B.</strong> It is about 40 lines and acts only when the plain edit does not compile.</li>
+<li><strong>Do not ask E2B for unified diffs.</strong> Even with the exact fix, 10 of 35 failed to land or changed nothing. E4B handles diffs well.</li>
+</ol>
+<h2 id="limitations">6. Limitations</h2>
+<ul>
+<li>35 tasks, one attempt each at temperature 0: intervals are wide, and differences of a few tasks are not evidence.</li>
+<li>Bugs are injected mutations in standalone code; real issues are longer and files larger.</li>
+<li>The matcher is reimplemented from the README; q4_0 GGUF and llama.cpp’s tool-call parser differ from the competition’s w4a16 checkpoints on vLLM. Thinking was off.</li>
+<li>I wrote all tasks before any model run; none was changed after seeing results.</li>
+</ul>
+<h2 id="future-work">7. Future work</h2>
+<ul>
+<li><strong>Real issues:</strong> the same ladder on the public dev-set tasks, where the agent must find the file itself.</li>
+<li><strong>A localization step:</strong> make the model name the lines it will change, check them against the failing test, then edit, and measure how much of the hint gap this closes.</li>
+<li><strong>Thinking and larger sizes:</strong> thinking on, sampling, and Gemma 4 12B and 26B-A4B.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., Narasimhan, K. (2024). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? ICLR 2024. arXiv:2310.06770.</li>
+<li>Yang, J., Jimenez, C. E., Wettig, A., Lieret, K., Yao, S., Narasimhan, K., Press, O. (2024). SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering. NeurIPS 2024. arXiv:2405.15793.</li>
+<li>Xia, C. S., Deng, Y., Dunn, S., Zhang, L. (2024). Agentless: Demystifying LLM-based Software Engineering Agents. arXiv:2407.01489.</li>
+<li>Wang, X. et al. (2024). OpenHands: An Open Platform for AI Software Developers as Generalist Agents. arXiv:2407.16741.</li>
+<li>Gauthier, P. (2023). Unified diffs make GPT-4 Turbo 3X less lazy. <a href="https://aider.chat/docs/unified-diffs.html" class="uri">https://aider.chat/docs/unified-diffs.html</a></li>
+<li>Glukhov, E., Bogomolov, E., Conti, M., Golubev, Y., Bezzubov, A. (2025). Diff-XYZ: A Benchmark for Evaluating Diff Understanding. NeurIPS 2025 Workshop on Deep Learning for Code in the Agentic Era. arXiv:2510.12487.</li>
+<li>Yang, J., Lieret, K., Jimenez, C. E., Wettig, A., Khandpur, K., Zhang, Y., Hui, B., Press, O., Schmidt, L., Yang, D. (2025). SWE-smith: Scaling Data for Software Engineering Agents. arXiv:2504.21798.</li>
+<li>Muennighoff, N. et al. (2023). OctoPack: Instruction Tuning Code Large Language Models. arXiv:2308.07124 (HumanEvalFix).</li>
+<li>Toeda, T. (2026). Scaffolding Helps the Smallest Gemma 4 Agent, Not the Larger Ones: run records, pre-registration and analysis code. Zenodo. doi:10.5281/zenodo.23834104.</li>
+<li>Gemma4_paper_track (2026). Why Gemma 4 31B loops on tool calls: ablations G1–G4 and a 12B control. <a href="https://github.com/usp787/Gemma4_paper_track" class="uri">https://github.com/usp787/Gemma4_paper_track</a> (findings.md).</li>
+<li>Fearoff5214 (2026). Gemma_4_Kaggle_hackathon: dataset inventory and harness notes. <a href="https://github.com/Fearoff5214/Gemma_4_Kaggle_hackathon" class="uri">https://github.com/Fearoff5214/Gemma_4_Kaggle_hackathon</a></li>
+<li>Google DeepMind (2026). Gemma 4. <a href="https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/" class="uri">https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/</a> (released 2 Apr 2026, Apache-2.0).</li>
+<li>Kaggle (2026). Google – The Gemma 4 Developer Agent; Paper Track. <a href="https://www.kaggle.com/competitions/gemma-4-developer-agent-paper" class="uri">https://www.kaggle.com/competitions/gemma-4-developer-agent-paper</a></li>
+<li>ggml-org (2026). llama.cpp. <a href="https://github.com/ggml-org/llama.cpp" class="uri">https://github.com/ggml-org/llama.cpp</a></li>
+</ul>
