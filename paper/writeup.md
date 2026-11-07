@@ -14,9 +14,9 @@ This note isolates the last two steps. The model sees the one file that contains
 
 Contributions:
 
-1.  **EditProbe**, 35 single-file tasks adapted from the competition’s dev-set repositories (requests, rich, httpx), each with a user-style problem statement, a 1–5 line gold fix and hidden FAIL_TO_PASS / PASS_TO_PASS tests.
-2.  A harness that drives Gemma 4 through native tool calls, applies edits with a reimplementation of the competition’s three-tier `edit_file` matcher, and logs every model output.
-3.  Measurements for E2B and E4B across four edit protocols, with and without the fix as a hint. Both models land a known fix almost perfectly; without it, the edit usually fails because it touches the wrong lines.
+1.  **EditProbe**, 35 single-file tasks from the competition’s dev-set repositories (requests, rich, httpx), with user-style problem statements, 1–5 line gold fixes and hidden tests.
+2.  A harness that drives Gemma 4 through native tool calls and applies edits with a reimplementation of the competition’s `edit_file` matcher.
+3.  Measurements for E2B and E4B across four edit protocols, with and without the fix as a hint.
 4.  A named failure mode, **span mismatch**, and a harness-side repair for it.
 
 ### 1.1 Why this question
@@ -172,10 +172,10 @@ The full grid (560 attempts) took 1.8 hours for E2B and 7.9 hours for E4B on two
 
 ## 5. What this means for an agent built on E2B/E4B
 
-1.  **Spend tokens on localization, not on edit formats.** With the fix known, both models land it in 94–97% of tasks for about 70 output tokens. Without it, an edit that misses the buggy lines almost never passes. An agent that first makes the model name the lines it will change (and checks they exist and relate to the failing test) targets the failure I actually observe.
-2.  **For files that fit in one** `read_file` **window, consider** `write_file`**.** It led for both sizes here (51% vs 26% on E2B, 63% vs 46% on E4B) at 2.3–4.5× the output tokens. This is one 35-task benchmark; the intervals overlap for E4B.
+1.  **Spend tokens on localization, not on edit formats.** With the fix known, both models land it in 94–97% of tasks for about 70 output tokens. Without it, an edit that misses the buggy lines almost never passes. An agent should first make the model name the lines it will change, and check them.
+2.  **For files that fit in one** `read_file` **window, consider** `write_file`**.** It led for both sizes here (51% vs 26% on E2B, 63% vs 46% on E4B) at 2.3–4.5× the output tokens. The intervals overlap for E4B.
 3.  **Report no-op edits back to the model.** A string compare before and after the edit is free and would have flagged 17–26% of E2B's edits.
-4.  **Add anchor repair to** `edit_file` **if you run E2B.** It is about 40 lines and acts only when the plain edit does not compile.
+4.  **Add anchor repair to** `edit_file` **if you run E2B.** It acts only when the plain edit does not compile.
 5.  **Do not ask E2B for unified diffs.** Even with the exact fix, 10 of 35 failed to land or changed nothing. E4B handles diffs well.
 
 ## 6. Limitations
@@ -193,17 +193,15 @@ The full grid (560 attempts) took 1.8 hours for E2B and 7.9 hours for E4B on two
 
 ## References
 
-- Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., Narasimhan, K. (2024). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? ICLR 2024. arXiv:2310.06770.
-- Yang, J., Jimenez, C. E., Wettig, A., Lieret, K., Yao, S., Narasimhan, K., Press, O. (2024). SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering. NeurIPS 2024. arXiv:2405.15793.
-- Xia, C. S., Deng, Y., Dunn, S., Zhang, L. (2024). Agentless: Demystifying LLM-based Software Engineering Agents. arXiv:2407.01489.
-- Wang, X. et al. (2024). OpenHands: An Open Platform for AI Software Developers as Generalist Agents. arXiv:2407.16741.
-- Gauthier, P. (2023). Unified diffs make GPT-4 Turbo 3X less lazy. <https://aider.chat/docs/unified-diffs.html>
-- Glukhov, E., Bogomolov, E., Conti, M., Golubev, Y., Bezzubov, A. (2025). Diff-XYZ: A Benchmark for Evaluating Diff Understanding. NeurIPS 2025 Workshop on Deep Learning for Code in the Agentic Era. arXiv:2510.12487.
-- Yang, J., Lieret, K., Jimenez, C. E., Wettig, A., Khandpur, K., Zhang, Y., Hui, B., Press, O., Schmidt, L., Yang, D. (2025). SWE-smith: Scaling Data for Software Engineering Agents. arXiv:2504.21798.
-- Muennighoff, N. et al. (2023). OctoPack: Instruction Tuning Code Large Language Models. arXiv:2308.07124 (HumanEvalFix).
-- Toeda, T. (2026). Scaffolding Helps the Smallest Gemma 4 Agent, Not the Larger Ones: run records, pre-registration and analysis code. Zenodo. doi:10.5281/zenodo.23834104.
-- Gemma4_paper_track (2026). Why Gemma 4 31B loops on tool calls: ablations G1–G4 and a 12B control. <https://github.com/usp787/Gemma4_paper_track> (findings.md).
-- Fearoff5214 (2026). Gemma_4_Kaggle_hackathon: dataset inventory and harness notes. <https://github.com/Fearoff5214/Gemma_4_Kaggle_hackathon>
-- Google DeepMind (2026). Gemma 4. <https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/> (released 2 Apr 2026, Apache-2.0).
-- Kaggle (2026). Google – The Gemma 4 Developer Agent; Paper Track. <https://www.kaggle.com/competitions/gemma-4-developer-agent-paper>
+- Jimenez et al. (2024). SWE-bench. ICLR 2024. arXiv:2310.06770.
+- Yang et al. (2024). SWE-agent. NeurIPS 2024. arXiv:2405.15793.
+- Xia et al. (2024). Agentless. arXiv:2407.01489.
+- Wang et al. (2024). OpenHands. arXiv:2407.16741.
+- Gauthier (2023). Unified diffs make GPT-4 Turbo 3X less lazy. <https://aider.chat/docs/unified-diffs.html>
+- Glukhov et al. (2025). Diff-XYZ. arXiv:2510.12487.
+- Yang et al. (2025). SWE-smith. arXiv:2504.21798.
+- Muennighoff et al. (2023). OctoPack (HumanEvalFix). arXiv:2308.07124.
+- Toeda (2026). Scaffolding Helps the Smallest Gemma 4 Agent, Not the Larger Ones. doi:10.5281/zenodo.23834104.
+- Gemma4_paper_track (2026). <https://github.com/usp787/Gemma4_paper_track>
+- Fearoff5214 (2026). <https://github.com/Fearoff5214/Gemma_4_Kaggle_hackathon>
 - ggml-org (2026). llama.cpp. <https://github.com/ggml-org/llama.cpp>
